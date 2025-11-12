@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Cocina - Inventario y Costos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍳 Gestión de Cocina</h1>
+            <p>Administra tu inventario, recetas y costos</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="ingredientes">Ingredientes</button>
+            <button class="tab-btn" data-tab="recetas">Recetas</button>
+            <button class="tab-btn" data-tab="analisis">Análisis de Costos</button>
+        </nav>
+
+        <!-- SECCIÓN DE INGREDIENTES -->
+        <section id="ingredientes" class="tab-content active">
+            <div class="section-header">
+                <h2>Inventario de Ingredientes</h2>
+                <button class="btn-primary" id="btnNuevoIngrediente">+ Nuevo Ingrediente</button>
+            </div>
+
+            <div id="modalIngrediente" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h3 id="tituloModalIngrediente">Nuevo Ingrediente</h3>
+                    <form id="formIngrediente">
+                        <div class="form-group">
+                            <label>Nombre del Ingrediente:</label>
+                            <input type="text" id="nombreIngrediente" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Cantidad:</label>
+                                <input type="number" id="cantidadIngrediente" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Unidad:</label>
+                                <select id="unidadIngrediente" required>
+                                    <option value="kg">Kilogramo (kg)</option>
+                                    <option value="g">Gramos (g)</option>
+                                    <option value="l">Litros (l)</option>
+                                    <option value="ml">Mililitros (ml)</option>
+                                    <option value="unidad">Unidad</option>
+                                    <option value="pza">Pieza</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Costo Total de Compra ($):</label>
+                            <input type="number" id="costoIngrediente" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Costo por Unidad:</label>
+                            <input type="text" id="costoPorUnidad" readonly class="readonly">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">Guardar</button>
+                            <button type="button" class="btn-secondary" id="btnCancelarIngrediente">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="tablaIngredientes">
+                    <thead>
+                        <tr>
+                            <th>Ingrediente</th>
+                            <th>Cantidad</th>
+                            <th>Unidad</th>
+                            <th>Costo Total</th>
+                            <th>Costo/Unidad</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodyIngredientes">
+                        <tr class="empty-state">
+                            <td colspan="6">No hay ingredientes registrados. ¡Agrega tu primer ingrediente!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECCIÓN DE RECETAS -->
+        <section id="recetas" class="tab-content">
+            <div class="section-header">
+                <h2>Mis Recetas</h2>
+                <button class="btn-primary" id="btnNuevaReceta">+ Nueva Receta</button>
+            </div>
+
+            <div id="modalReceta" class="modal">
+                <div class="modal-content modal-large">
+                    <span class="close" id="closeReceta">&times;</span>
+                    <h3 id="tituloModalReceta">Nueva Receta</h3>
+                    <form id="formReceta">
+                        <div class="form-group">
+                            <label>Nombre de la Receta:</label>
+                            <input type="text" id="nombreReceta" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción:</label>
+                            <textarea id="descripcionReceta" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Porciones que produce:</label>
+                            <input type="number" id="porcionesReceta" value="1" min="1" required>
+                        </div>
+
+                        <h4>Ingredientes de la Receta</h4>
+                        <div class="ingredientes-receta">
+                            <div class="form-row">
+                                <div class="form-group flex-2">
+                                    <label>Ingrediente:</label>
+                                    <select id="selectIngredienteReceta">
+                                        <option value="">Seleccionar ingrediente...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Cantidad:</label>
+                                    <input type="number" id="cantidadIngredienteReceta" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn-secondary" id="btnAgregarIngredienteReceta">Agregar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ingredientes-lista" id="ingredientesListaReceta">
+                            <!-- Los ingredientes agregados aparecerán aquí -->
+                        </div>
+
+                        <div class="form-group">
+                            <label>Costo de Empaquetado ($):</label>
+                            <input type="number" id="costoEmpaquetado" step="0.01" value="0">
+                        </div>
+
+                        <div class="costo-total-receta">
+                            <strong>Costo Total de la Receta: $<span id="costoTotalReceta">0.00</span></strong>
+                            <small>Costo por porción: $<span id="costoPorPorcion">0.00</span></small>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">Guardar Receta</button>
+                            <button type="button" class="btn-secondary" id="btnCancelarReceta">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="recetas-grid" id="recetasGrid">
+                <div class="empty-state-card">
+                    <p>No hay recetas registradas. ¡Crea tu primera receta!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN DE ANÁLISIS -->
+        <section id="analisis" class="tab-content">
+            <div class="section-header">
+                <h2>Análisis de Costos y Ganancias</h2>
+            </div>
+
+            <div id="analisisRecetas" class="analisis-container">
+                <div class="empty-state-card">
+                    <p>Selecciona una receta para ver su análisis de costos</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,672 @@
+// ============================================
+// GESTIÓN DE DATOS Y API
+// ============================================
+
+const API_URL = 'http://localhost:8080/api';
+
+let ingredientes = [];
+let recetas = [];
+let ingredienteEditando = null;
+let recetaEditando = null;
+let ingredientesRecetaTemp = [];
+
+// Cargar datos desde la API
+async function cargarDatos() {
+    try {
+        // Cargar ingredientes
+        const resIngredientes = await fetch(`${API_URL}/ingredientes`);
+        if (resIngredientes.ok) {
+            ingredientes = await resIngredientes.json();
+            // Convertir _id de MongoDB a id para compatibilidad
+            ingredientes = ingredientes.map(ing => ({
+                ...ing,
+                id: ing._id
+            }));
+        }
+        
+        // Cargar recetas
+        const resRecetas = await fetch(`${API_URL}/recetas`);
+        if (resRecetas.ok) {
+            recetas = await resRecetas.json();
+            // Convertir _id de MongoDB a id para compatibilidad
+            recetas = recetas.map(rec => ({
+                ...rec,
+                id: rec._id
+            }));
+        }
+        
+        renderizarIngredientes();
+        renderizarRecetas();
+    } catch (error) {
+        console.error('Error al cargar datos:', error);
+        alert('Error al conectar con el servidor. Asegúrate de que el backend esté corriendo en http://localhost:8080');
+    }
+}
+
+// Guardar ingrediente en la API
+async function guardarIngrediente(ingrediente) {
+    try {
+        const method = ingrediente._id ? 'PUT' : 'POST';
+        const url = ingrediente._id 
+            ? `${API_URL}/ingredientes/${ingrediente._id}`
+            : `${API_URL}/ingredientes`;
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(ingrediente)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error al guardar ingrediente');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error al guardar ingrediente:', error);
+        throw error;
+    }
+}
+
+// Eliminar ingrediente de la API
+async function eliminarIngredienteAPI(id) {
+    try {
+        const response = await fetch(`${API_URL}/ingredientes/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error al eliminar ingrediente');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error al eliminar ingrediente:', error);
+        throw error;
+    }
+}
+
+// Guardar receta en la API
+async function guardarReceta(receta) {
+    try {
+        const method = receta._id ? 'PUT' : 'POST';
+        const url = receta._id 
+            ? `${API_URL}/recetas/${receta._id}`
+            : `${API_URL}/recetas`;
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(receta)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error al guardar receta');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error al guardar receta:', error);
+        throw error;
+    }
+}
+
+// Eliminar receta de la API
+async function eliminarRecetaAPI(id) {
+    try {
+        const response = await fetch(`${API_URL}/recetas/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error al eliminar receta');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error al eliminar receta:', error);
+        throw error;
+    }
+}
+
+// ============================================
+// NAVEGACIÓN ENTRE TABS
+// ============================================
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const tabId = this.dataset.tab;
+        
+        // Actualizar botones
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Actualizar contenido
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(tabId).classList.add('active');
+        
+        // Si es la pestaña de análisis, actualizar contenido
+        if (tabId === 'analisis') {
+            mostrarAnalisis();
+        }
+    });
+});
+
+// ============================================
+// GESTIÓN DE INGREDIENTES
+// ============================================
+
+const modalIngrediente = document.getElementById('modalIngrediente');
+const btnNuevoIngrediente = document.getElementById('btnNuevoIngrediente');
+const btnCancelarIngrediente = document.getElementById('btnCancelarIngrediente');
+const formIngrediente = document.getElementById('formIngrediente');
+const closeIngrediente = modalIngrediente.querySelector('.close');
+
+// Abrir modal para nuevo ingrediente
+btnNuevoIngrediente.addEventListener('click', () => {
+    ingredienteEditando = null;
+    formIngrediente.reset();
+    document.getElementById('tituloModalIngrediente').textContent = 'Nuevo Ingrediente';
+    modalIngrediente.style.display = 'block';
+});
+
+// Cerrar modal
+closeIngrediente.addEventListener('click', () => {
+    modalIngrediente.style.display = 'none';
+});
+
+btnCancelarIngrediente.addEventListener('click', () => {
+    modalIngrediente.style.display = 'none';
+});
+
+// Calcular costo por unidad en tiempo real
+document.getElementById('cantidadIngrediente').addEventListener('input', calcularCostoPorUnidad);
+document.getElementById('costoIngrediente').addEventListener('input', calcularCostoPorUnidad);
+
+function calcularCostoPorUnidad() {
+    const cantidad = parseFloat(document.getElementById('cantidadIngrediente').value) || 0;
+    const costo = parseFloat(document.getElementById('costoIngrediente').value) || 0;
+    const costoPorUnidad = cantidad > 0 ? (costo / cantidad) : 0;
+    document.getElementById('costoPorUnidad').value = `$${costoPorUnidad.toFixed(2)}`;
+}
+
+// Guardar ingrediente
+formIngrediente.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const nombre = document.getElementById('nombreIngrediente').value;
+    const cantidad = parseFloat(document.getElementById('cantidadIngrediente').value);
+    const unidad = document.getElementById('unidadIngrediente').value;
+    const costoTotal = parseFloat(document.getElementById('costoIngrediente').value);
+    const costoPorUnidad = costoTotal / cantidad;
+    
+    const ingrediente = {
+        nombre,
+        cantidad,
+        unidad,
+        costoTotal,
+        costoPorUnidad
+    };
+    
+    if (ingredienteEditando) {
+        ingrediente._id = ingredienteEditando._id || ingredienteEditando.id;
+    }
+    
+    try {
+        await guardarIngrediente(ingrediente);
+        await cargarDatos();
+        modalIngrediente.style.display = 'none';
+        formIngrediente.reset();
+        ingredienteEditando = null;
+    } catch (error) {
+        alert('Error al guardar el ingrediente. Verifica la conexión con el servidor.');
+    }
+});
+
+// Renderizar tabla de ingredientes
+function renderizarIngredientes() {
+    const tbody = document.getElementById('bodyIngredientes');
+    
+    if (ingredientes.length === 0) {
+        tbody.innerHTML = '<tr class="empty-state"><td colspan="6">No hay ingredientes registrados. ¡Agrega tu primer ingrediente!</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = ingredientes.map(ing => `
+        <tr>
+            <td>${ing.nombre}</td>
+            <td>${ing.cantidad}</td>
+            <td>${ing.unidad}</td>
+            <td>$${ing.costoTotal.toFixed(2)}</td>
+            <td>$${ing.costoPorUnidad.toFixed(2)}</td>
+            <td class="acciones">
+                <button class="btn-icon" onclick="editarIngrediente(${ing.id})" title="Editar">✏️</button>
+                <button class="btn-icon" onclick="eliminarIngrediente(${ing.id})" title="Eliminar">🗑️</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Editar ingrediente
+function editarIngrediente(id) {
+    ingredienteEditando = ingredientes.find(i => i.id === id);
+    if (!ingredienteEditando) return;
+    
+    document.getElementById('tituloModalIngrediente').textContent = 'Editar Ingrediente';
+    document.getElementById('nombreIngrediente').value = ingredienteEditando.nombre;
+    document.getElementById('cantidadIngrediente').value = ingredienteEditando.cantidad;
+    document.getElementById('unidadIngrediente').value = ingredienteEditando.unidad;
+    document.getElementById('costoIngrediente').value = ingredienteEditando.costoTotal;
+    calcularCostoPorUnidad();
+    
+    modalIngrediente.style.display = 'block';
+}
+
+// Eliminar ingrediente
+async function eliminarIngrediente(id) {
+    if (confirm('¿Estás seguro de eliminar este ingrediente?')) {
+        try {
+            await eliminarIngredienteAPI(id);
+            await cargarDatos();
+            actualizarSelectIngredientes();
+        } catch (error) {
+            alert('Error al eliminar el ingrediente. Verifica la conexión con el servidor.');
+        }
+    }
+}
+
+// ============================================
+// GESTIÓN DE RECETAS
+// ============================================
+
+const modalReceta = document.getElementById('modalReceta');
+const btnNuevaReceta = document.getElementById('btnNuevaReceta');
+const btnCancelarReceta = document.getElementById('btnCancelarReceta');
+const formReceta = document.getElementById('formReceta');
+const closeReceta = document.getElementById('closeReceta');
+
+// Abrir modal para nueva receta
+btnNuevaReceta.addEventListener('click', () => {
+    if (ingredientes.length === 0) {
+        alert('Primero debes agregar ingredientes antes de crear una receta.');
+        return;
+    }
+    
+    recetaEditando = null;
+    ingredientesRecetaTemp = [];
+    formReceta.reset();
+    document.getElementById('tituloModalReceta').textContent = 'Nueva Receta';
+    actualizarSelectIngredientes();
+    actualizarListaIngredientesReceta();
+    modalReceta.style.display = 'block';
+});
+
+// Cerrar modal
+closeReceta.addEventListener('click', () => {
+    modalReceta.style.display = 'none';
+});
+
+btnCancelarReceta.addEventListener('click', () => {
+    modalReceta.style.display = 'none';
+});
+
+// Actualizar select de ingredientes
+function actualizarSelectIngredientes() {
+    const select = document.getElementById('selectIngredienteReceta');
+    select.innerHTML = '<option value="">Seleccionar ingrediente...</option>' +
+        ingredientes.map(ing => `<option value="${ing.id}">${ing.nombre} (${ing.unidad})</option>`).join('');
+}
+
+// Agregar ingrediente a la receta
+document.getElementById('btnAgregarIngredienteReceta').addEventListener('click', () => {
+    const selectIngrediente = document.getElementById('selectIngredienteReceta');
+    const cantidad = parseFloat(document.getElementById('cantidadIngredienteReceta').value);
+    
+    if (!selectIngrediente.value || !cantidad || cantidad <= 0) {
+        alert('Por favor selecciona un ingrediente y una cantidad válida.');
+        return;
+    }
+    
+    const ingredienteId = parseInt(selectIngrediente.value);
+    const ingrediente = ingredientes.find(i => i.id === ingredienteId);
+    
+    if (!ingrediente) return;
+    
+    // Verificar si ya existe
+    const existente = ingredientesRecetaTemp.find(i => i.ingredienteId === ingredienteId);
+    if (existente) {
+        alert('Este ingrediente ya está en la receta. Elimínalo primero si quieres cambiar la cantidad.');
+        return;
+    }
+    
+    ingredientesRecetaTemp.push({
+        ingredienteId: ingrediente.id,
+        nombre: ingrediente.nombre,
+        cantidad: cantidad,
+        unidad: ingrediente.unidad,
+        costoPorUnidad: ingrediente.costoPorUnidad,
+        costoTotal: cantidad * ingrediente.costoPorUnidad
+    });
+    
+    document.getElementById('cantidadIngredienteReceta').value = '';
+    selectIngrediente.value = '';
+    
+    actualizarListaIngredientesReceta();
+    calcularCostoTotalReceta();
+});
+
+// Actualizar lista de ingredientes en la receta
+function actualizarListaIngredientesReceta() {
+    const lista = document.getElementById('ingredientesListaReceta');
+    
+    if (ingredientesRecetaTemp.length === 0) {
+        lista.innerHTML = '<p class="empty-message">No hay ingredientes agregados a la receta.</p>';
+        return;
+    }
+    
+    lista.innerHTML = ingredientesRecetaTemp.map((ing, index) => `
+        <div class="ingrediente-item">
+            <span>${ing.nombre}: ${ing.cantidad} ${ing.unidad}</span>
+            <span>$${ing.costoTotal.toFixed(2)}</span>
+            <button type="button" class="btn-icon-small" onclick="eliminarIngredienteReceta(${index})">❌</button>
+        </div>
+    `).join('');
+}
+
+// Eliminar ingrediente de la receta
+function eliminarIngredienteReceta(index) {
+    ingredientesRecetaTemp.splice(index, 1);
+    actualizarListaIngredientesReceta();
+    calcularCostoTotalReceta();
+}
+
+// Calcular costo total de la receta
+document.getElementById('costoEmpaquetado').addEventListener('input', calcularCostoTotalReceta);
+document.getElementById('porcionesReceta').addEventListener('input', calcularCostoTotalReceta);
+
+function calcularCostoTotalReceta() {
+    const costoIngredientes = ingredientesRecetaTemp.reduce((sum, ing) => sum + ing.costoTotal, 0);
+    const costoEmpaquetado = parseFloat(document.getElementById('costoEmpaquetado').value) || 0;
+    const porciones = parseFloat(document.getElementById('porcionesReceta').value) || 1;
+    
+    const costoTotal = costoIngredientes + costoEmpaquetado;
+    const costoPorPorcion = costoTotal / porciones;
+    
+    document.getElementById('costoTotalReceta').textContent = costoTotal.toFixed(2);
+    document.getElementById('costoPorPorcion').textContent = costoPorPorcion.toFixed(2);
+}
+
+// Guardar receta
+formReceta.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (ingredientesRecetaTemp.length === 0) {
+        alert('Debes agregar al menos un ingrediente a la receta.');
+        return;
+    }
+    
+    const nombre = document.getElementById('nombreReceta').value;
+    const descripcion = document.getElementById('descripcionReceta').value;
+    const porciones = parseFloat(document.getElementById('porcionesReceta').value);
+    const costoEmpaquetado = parseFloat(document.getElementById('costoEmpaquetado').value) || 0;
+    
+    const costoIngredientes = ingredientesRecetaTemp.reduce((sum, ing) => sum + ing.costoTotal, 0);
+    const costoTotal = costoIngredientes + costoEmpaquetado;
+    const costoPorPorcion = costoTotal / porciones;
+    
+    const receta = {
+        nombre,
+        descripcion,
+        porciones,
+        ingredientes: [...ingredientesRecetaTemp],
+        costoEmpaquetado,
+        costoIngredientes,
+        costoTotal,
+        costoPorPorcion
+    };
+    
+    if (recetaEditando) {
+        receta._id = recetaEditando._id || recetaEditando.id;
+    }
+    
+    try {
+        await guardarReceta(receta);
+        await cargarDatos();
+        modalReceta.style.display = 'none';
+        formReceta.reset();
+        ingredientesRecetaTemp = [];
+        recetaEditando = null;
+    } catch (error) {
+        alert('Error al guardar la receta. Verifica la conexión con el servidor.');
+    }
+});
+
+// Renderizar recetas
+function renderizarRecetas() {
+    const grid = document.getElementById('recetasGrid');
+    
+    if (recetas.length === 0) {
+        grid.innerHTML = '<div class="empty-state-card"><p>No hay recetas registradas. ¡Crea tu primera receta!</p></div>';
+        return;
+    }
+    
+    grid.innerHTML = recetas.map(receta => `
+        <div class="receta-card">
+            <div class="receta-header">
+                <h3>${receta.nombre}</h3>
+                <div class="receta-acciones">
+                    <button class="btn-icon" onclick="editarReceta(${receta.id})" title="Editar">✏️</button>
+                    <button class="btn-icon" onclick="eliminarReceta(${receta.id})" title="Eliminar">🗑️</button>
+                </div>
+            </div>
+            ${receta.descripcion ? `<p class="receta-descripcion">${receta.descripcion}</p>` : ''}
+            <div class="receta-info">
+                <span>🍽️ ${receta.porciones} porcion${receta.porciones > 1 ? 'es' : ''}</span>
+                <span>💰 Costo total: $${receta.costoTotal.toFixed(2)}</span>
+            </div>
+            <div class="receta-costo-porcion">
+                <strong>Costo por porción: $${receta.costoPorPorcion.toFixed(2)}</strong>
+            </div>
+            <details class="receta-detalles">
+                <summary>Ver ingredientes (${receta.ingredientes.length})</summary>
+                <ul>
+                    ${receta.ingredientes.map(ing => `
+                        <li>${ing.nombre}: ${ing.cantidad} ${ing.unidad} - $${ing.costoTotal.toFixed(2)}</li>
+                    `).join('')}
+                    ${receta.costoEmpaquetado > 0 ? `<li>Empaquetado: $${receta.costoEmpaquetado.toFixed(2)}</li>` : ''}
+                </ul>
+            </details>
+        </div>
+    `).join('');
+}
+
+// Editar receta
+function editarReceta(id) {
+    recetaEditando = recetas.find(r => r.id === id);
+    if (!recetaEditando) return;
+    
+    document.getElementById('tituloModalReceta').textContent = 'Editar Receta';
+    document.getElementById('nombreReceta').value = recetaEditando.nombre;
+    document.getElementById('descripcionReceta').value = recetaEditando.descripcion;
+    document.getElementById('porcionesReceta').value = recetaEditando.porciones;
+    document.getElementById('costoEmpaquetado').value = recetaEditando.costoEmpaquetado;
+    
+    ingredientesRecetaTemp = [...recetaEditando.ingredientes];
+    
+    actualizarSelectIngredientes();
+    actualizarListaIngredientesReceta();
+    calcularCostoTotalReceta();
+    
+    modalReceta.style.display = 'block';
+}
+
+// Eliminar receta
+async function eliminarReceta(id) {
+    if (confirm('¿Estás seguro de eliminar esta receta?')) {
+        try {
+            await eliminarRecetaAPI(id);
+            await cargarDatos();
+        } catch (error) {
+            alert('Error al eliminar la receta. Verifica la conexión con el servidor.');
+        }
+    }
+}
+
+// ============================================
+// ANÁLISIS DE COSTOS Y GANANCIAS
+// ============================================
+
+function mostrarAnalisis() {
+    const container = document.getElementById('analisisRecetas');
+    
+    if (recetas.length === 0) {
+        container.innerHTML = '<div class="empty-state-card"><p>No hay recetas para analizar. Crea recetas primero.</p></div>';
+        return;
+    }
+    
+    container.innerHTML = recetas.map(receta => {
+        const precioVentaSugerido = receta.costoPorPorcion * 3; // Margen del 200%
+        const ganancia = precioVentaSugerido - receta.costoPorPorcion;
+        const margenPorcentaje = ((ganancia / precioVentaSugerido) * 100).toFixed(1);
+        
+        return `
+            <div class="analisis-card">
+                <h3>${receta.nombre}</h3>
+                <div class="analisis-grid">
+                    <div class="analisis-item">
+                        <label>Inversión por porción:</label>
+                        <span class="valor-costo">$${receta.costoPorPorcion.toFixed(2)}</span>
+                    </div>
+                    <div class="analisis-item">
+                        <label>Precio sugerido de venta:</label>
+                        <span class="valor-sugerido">$${precioVentaSugerido.toFixed(2)}</span>
+                        <small>(Margen 200%)</small>
+                    </div>
+                    <div class="analisis-item">
+                        <label>Ganancia por porción:</label>
+                        <span class="valor-ganancia">$${ganancia.toFixed(2)}</span>
+                        <small>(${margenPorcentaje}% margen)</small>
+                    </div>
+                </div>
+                
+                <div class="calculadora-personalizada">
+                    <h4>Calculadora Personalizada</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Precio de venta deseado ($):</label>
+                            <input type="number" step="0.01" 
+                                   class="input-precio-venta" 
+                                   data-receta-id="${receta.id}"
+                                   placeholder="${precioVentaSugerido.toFixed(2)}">
+                        </div>
+                        <div class="form-group">
+                            <label>Porciones a vender:</label>
+                            <input type="number" 
+                                   class="input-porciones-vender" 
+                                   data-receta-id="${receta.id}"
+                                   value="1" min="1">
+                        </div>
+                    </div>
+                    <div class="resultados-personalizados" id="resultados-${receta.id}">
+                        <div class="resultado-item">
+                            <span>Inversión total:</span>
+                            <strong>$${receta.costoPorPorcion.toFixed(2)}</strong>
+                        </div>
+                        <div class="resultado-item">
+                            <span>Ingreso total:</span>
+                            <strong>$${precioVentaSugerido.toFixed(2)}</strong>
+                        </div>
+                        <div class="resultado-item ganancia-final">
+                            <span>Ganancia total:</span>
+                            <strong>$${ganancia.toFixed(2)}</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="desglose-costos">
+                    <h4>Desglose de Costos</h4>
+                    <table class="tabla-desglose">
+                        <tr>
+                            <td>Costo de ingredientes:</td>
+                            <td>$${receta.costoIngredientes.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td>Costo de empaquetado:</td>
+                            <td>$${receta.costoEmpaquetado.toFixed(2)}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Costo total (${receta.porciones} porcion${receta.porciones > 1 ? 'es' : ''}):</strong></td>
+                            <td><strong>$${receta.costoTotal.toFixed(2)}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Agregar event listeners para calculadora personalizada
+    document.querySelectorAll('.input-precio-venta, .input-porciones-vender').forEach(input => {
+        input.addEventListener('input', function() {
+            const recetaId = parseInt(this.dataset.recetaId);
+            calcularGananciasPersonalizadas(recetaId);
+        });
+    });
+}
+
+function calcularGananciasPersonalizadas(recetaId) {
+    const receta = recetas.find(r => r.id === recetaId);
+    if (!receta) return;
+    
+    const precioVentaInput = document.querySelector(`.input-precio-venta[data-receta-id="${recetaId}"]`);
+    const porcionesInput = document.querySelector(`.input-porciones-vender[data-receta-id="${recetaId}"]`);
+    
+    const precioVenta = parseFloat(precioVentaInput.value) || (receta.costoPorPorcion * 3);
+    const porciones = parseInt(porcionesInput.value) || 1;
+    
+    const inversionTotal = receta.costoPorPorcion * porciones;
+    const ingresoTotal = precioVenta * porciones;
+    const gananciaTotal = ingresoTotal - inversionTotal;
+    
+    const resultadosDiv = document.getElementById(`resultados-${recetaId}`);
+    resultadosDiv.innerHTML = `
+        <div class="resultado-item">
+            <span>Inversión total:</span>
+            <strong>$${inversionTotal.toFixed(2)}</strong>
+        </div>
+        <div class="resultado-item">
+            <span>Ingreso total:</span>
+            <strong>$${ingresoTotal.toFixed(2)}</strong>
+        </div>
+        <div class="resultado-item ganancia-final ${gananciaTotal < 0 ? 'perdida' : ''}">
+            <span>${gananciaTotal < 0 ? 'Pérdida' : 'Ganancia'} total:</span>
+            <strong>$${gananciaTotal.toFixed(2)}</strong>
+        </div>
+    `;
+}
+
+// ============================================
+// CERRAR MODALES AL HACER CLICK FUERA
+// ============================================
+
+window.addEventListener('click', (e) => {
+    if (e.target === modalIngrediente) {
+        modalIngrediente.style.display = 'none';
+    }
+    if (e.target === modalReceta) {
+        modalReceta.style.display = 'none';
+    }
+});
+
+// ============================================
+// INICIALIZACIÓN
+// ============================================
+
+cargarDatos();
+renderizarIngredientes();
+renderizarRecetas();
