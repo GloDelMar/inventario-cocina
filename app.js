@@ -333,10 +333,13 @@ document.getElementById('btnAgregarIngredienteReceta').addEventListener('click',
         return;
     }
     
-    const ingredienteId = parseInt(selectIngrediente.value);
+    const ingredienteId = selectIngrediente.value; // Dejar como string para MongoDB
     const ingrediente = ingredientes.find(i => i.id === ingredienteId);
     
-    if (!ingrediente) return;
+    if (!ingrediente) {
+        alert('Ingrediente no encontrado.');
+        return;
+    }
     
     // Verificar si ya existe
     const existente = ingredientesRecetaTemp.find(i => i.ingredienteId === ingredienteId);
@@ -348,7 +351,7 @@ document.getElementById('btnAgregarIngredienteReceta').addEventListener('click',
     ingredientesRecetaTemp.push({
         ingredienteId: ingrediente.id,
         nombre: ingrediente.nombre,
-        cantidad: cantidad,
+        cantidadUsada: cantidad, // Cambiar a cantidadUsada para coincidir con el backend
         unidad: ingrediente.unidad,
         costoPorUnidad: ingrediente.costoPorUnidad,
         costoTotal: cantidad * ingrediente.costoPorUnidad
@@ -372,7 +375,7 @@ function actualizarListaIngredientesReceta() {
     
     lista.innerHTML = ingredientesRecetaTemp.map((ing, index) => `
         <div class="ingrediente-item">
-            <span>${ing.nombre}: ${ing.cantidad} ${ing.unidad}</span>
+            <span>${ing.nombre}: ${ing.cantidadUsada} ${ing.unidad}</span>
             <span>$${ing.costoTotal.toFixed(2)}</span>
             <button type="button" class="btn-icon-small" onclick="eliminarIngredienteReceta(${index})">❌</button>
         </div>
@@ -416,19 +419,17 @@ formReceta.addEventListener('submit', async (e) => {
     const porciones = parseFloat(document.getElementById('porcionesReceta').value);
     const costoEmpaquetado = parseFloat(document.getElementById('costoEmpaquetado').value) || 0;
     
-    const costoIngredientes = ingredientesRecetaTemp.reduce((sum, ing) => sum + ing.costoTotal, 0);
-    const costoTotal = costoIngredientes + costoEmpaquetado;
-    const costoPorPorcion = costoTotal / porciones;
-    
+    // Enviar solo los campos requeridos por el backend
+    // El backend calculará automáticamente los costos
     const receta = {
         nombre,
         descripcion,
         porciones,
-        ingredientes: [...ingredientesRecetaTemp],
-        costoEmpaquetado,
-        costoIngredientes,
-        costoTotal,
-        costoPorPorcion
+        ingredientes: ingredientesRecetaTemp.map(ing => ({
+            ingredienteId: ing.ingredienteId,
+            cantidadUsada: ing.cantidadUsada
+        })),
+        costoEmpaquetado
     };
     
     if (recetaEditando) {
