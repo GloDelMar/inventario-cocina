@@ -28,16 +28,36 @@ router.get('/:id', async (req, res) => {
 
 // POST - Crear una nueva receta
 router.post('/', async (req, res) => {
+    console.log('=== POST /api/recetas ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     try {
         const { nombre, descripcion, porciones, ingredientes, costoEmpaquetado } = req.body;
         
+        console.log('Validando datos recibidos...');
+        console.log('- Nombre:', nombre);
+        console.log('- Descripción:', descripcion);
+        console.log('- Porciones:', porciones);
+        console.log('- Ingredientes:', ingredientes ? ingredientes.length : 0);
+        console.log('- Costo empaquetado:', costoEmpaquetado);
+        
+        if (!ingredientes || ingredientes.length === 0) {
+            console.error('Error: No hay ingredientes');
+            return res.status(400).json({ message: 'Debe incluir al menos un ingrediente' });
+        }
+        
         // Enriquecer ingredientes con datos de la base de datos
+        console.log('Enriqueciendo ingredientes desde DB...');
         const ingredientesEnriquecidos = await Promise.all(
-            ingredientes.map(async (ing) => {
+            ingredientes.map(async (ing, index) => {
+                console.log(`  [${index}] Buscando ingrediente ID: ${ing.ingredienteId}`);
                 const ingredienteDB = await Ingrediente.findById(ing.ingredienteId);
                 if (!ingredienteDB) {
-                    throw new Error(`Ingrediente ${ing.nombre} no encontrado`);
+                    console.error(`  [${index}] ERROR: Ingrediente no encontrado`);
+                    throw new Error(`Ingrediente con ID ${ing.ingredienteId} no encontrado`);
                 }
+                
+                console.log(`  [${index}] Encontrado: ${ingredienteDB.nombre}, costo: ${ingredienteDB.costoPorUnidad}/unidad`);
                 
                 return {
                     ingredienteId: ing.ingredienteId,
@@ -51,13 +71,24 @@ router.post('/', async (req, res) => {
             })
         );
         
+        console.log('Ingredientes enriquecidos:', ingredientesEnriquecidos.length);
+        
         // Calcular costos
+        console.log('Calculando costos...');
         const costoIngredientes = ingredientesEnriquecidos.reduce((sum, ing) => {
-            return sum + (ing.costoPorUnidad * ing.cantidadUsada);
+            const costo = ing.costoPorUnidad * ing.cantidadUsada;
+            console.log(`  ${ing.nombre}: ${ing.cantidadUsada} × ${ing.costoPorUnidad} = ${costo}`);
+            return sum + costo;
         }, 0);
         
         const costoTotal = costoIngredientes + (costoEmpaquetado || 0);
         const costoPorPorcion = costoTotal / porciones;
+        
+        console.log('Costos calculados:');
+        console.log('  Costo ingredientes:', costoIngredientes);
+        console.log('  Costo empaquetado:', costoEmpaquetado || 0);
+        console.log('  Costo total:', costoTotal);
+        console.log('  Costo por porción:', costoPorPorcion);
         
         const nuevaReceta = new Receta({
             nombre,
@@ -70,25 +101,46 @@ router.post('/', async (req, res) => {
             costoPorPorcion
         });
         
+        console.log('Guardando receta en DB...');
         const recetaGuardada = await nuevaReceta.save();
+        console.log('Receta guardada exitosamente, ID:', recetaGuardada._id);
+        
         res.status(201).json(recetaGuardada);
     } catch (error) {
+        console.error('Error al crear receta:', error.message);
+        console.error('Stack:', error.stack);
         res.status(400).json({ message: 'Error al crear receta', error: error.message });
     }
 });
 
 // PUT - Actualizar una receta
 router.put('/:id', async (req, res) => {
+    console.log('=== PUT /api/recetas/:id ===');
+    console.log('Recipe ID:', req.params.id);
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     try {
         const { nombre, descripcion, porciones, ingredientes, costoEmpaquetado } = req.body;
         
+        console.log('Validando datos recibidos...');
+        console.log('- Nombre:', nombre);
+        console.log('- Descripción:', descripcion);
+        console.log('- Porciones:', porciones);
+        console.log('- Ingredientes:', ingredientes ? ingredientes.length : 0);
+        console.log('- Costo empaquetado:', costoEmpaquetado);
+        
         // Enriquecer ingredientes con datos de la base de datos
+        console.log('Enriqueciendo ingredientes desde DB...');
         const ingredientesEnriquecidos = await Promise.all(
-            ingredientes.map(async (ing) => {
+            ingredientes.map(async (ing, index) => {
+                console.log(`  [${index}] Buscando ingrediente ID: ${ing.ingredienteId}`);
                 const ingredienteDB = await Ingrediente.findById(ing.ingredienteId);
                 if (!ingredienteDB) {
-                    throw new Error(`Ingrediente ${ing.nombre} no encontrado`);
+                    console.error(`  [${index}] ERROR: Ingrediente no encontrado`);
+                    throw new Error(`Ingrediente con ID ${ing.ingredienteId} no encontrado`);
                 }
+                
+                console.log(`  [${index}] Encontrado: ${ingredienteDB.nombre}, costo: ${ingredienteDB.costoPorUnidad}/unidad`);
                 
                 return {
                     ingredienteId: ing.ingredienteId,
@@ -103,13 +155,23 @@ router.put('/:id', async (req, res) => {
         );
         
         // Calcular costos
+        console.log('Calculando costos...');
         const costoIngredientes = ingredientesEnriquecidos.reduce((sum, ing) => {
-            return sum + (ing.costoPorUnidad * ing.cantidadUsada);
+            const costo = ing.costoPorUnidad * ing.cantidadUsada;
+            console.log(`  ${ing.nombre}: ${ing.cantidadUsada} × ${ing.costoPorUnidad} = ${costo}`);
+            return sum + costo;
         }, 0);
         
         const costoTotal = costoIngredientes + (costoEmpaquetado || 0);
         const costoPorPorcion = costoTotal / porciones;
         
+        console.log('Costos calculados:');
+        console.log('  Costo ingredientes:', costoIngredientes);
+        console.log('  Costo empaquetado:', costoEmpaquetado || 0);
+        console.log('  Costo total:', costoTotal);
+        console.log('  Costo por porción:', costoPorPorcion);
+        
+        console.log('Actualizando receta en DB...');
         const recetaActualizada = await Receta.findByIdAndUpdate(
             req.params.id,
             {
@@ -126,11 +188,15 @@ router.put('/:id', async (req, res) => {
         );
         
         if (!recetaActualizada) {
+            console.error('Receta no encontrada con ID:', req.params.id);
             return res.status(404).json({ message: 'Receta no encontrada' });
         }
         
+        console.log('Receta actualizada exitosamente');
         res.json(recetaActualizada);
     } catch (error) {
+        console.error('Error al actualizar receta:', error.message);
+        console.error('Stack:', error.stack);
         res.status(400).json({ message: 'Error al actualizar receta', error: error.message });
     }
 });
