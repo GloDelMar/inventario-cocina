@@ -592,8 +592,8 @@ function renderizarRecetas() {
             <div class="receta-header">
                 <h3>${receta.nombre}</h3>
                 <div class="receta-acciones">
-                    <button class="btn-icon" onclick="editarReceta(${receta.id})" title="Editar">✏️</button>
-                    <button class="btn-icon" onclick="eliminarReceta(${receta.id})" title="Eliminar">🗑️</button>
+                    <button class="btn-icon" onclick="editarReceta('${receta.id}')" title="Editar">✏️</button>
+                    <button class="btn-icon" onclick="eliminarReceta('${receta.id}')" title="Eliminar">🗑️</button>
                 </div>
             </div>
             ${receta.descripcion ? `<p class="receta-descripcion">${receta.descripcion}</p>` : ''}
@@ -619,7 +619,10 @@ function renderizarRecetas() {
 
 // Editar receta
 function editarReceta(id) {
+    console.log('=== EDITANDO RECETA ===');
+    console.log('ID recibido:', id, 'tipo:', typeof id);
     recetaEditando = recetas.find(r => r.id === id);
+    console.log('Receta encontrada:', recetaEditando ? 'SÍ' : 'NO');
     if (!recetaEditando) return;
     
     document.getElementById('tituloModalReceta').textContent = 'Editar Receta';
