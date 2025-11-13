@@ -1,5 +1,6 @@
 // ============================================
 // GESTIÓN DE DATOS Y API
+// v1.1 - Fixed MongoDB ID handling for recipes
 // ============================================
 
 const API_URL = 'https://inventario-cocina-backend.onrender.com/api';
