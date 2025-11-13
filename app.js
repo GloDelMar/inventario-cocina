@@ -39,7 +39,7 @@ async function cargarDatos() {
         renderizarRecetas();
     } catch (error) {
         console.error('Error al cargar datos:', error);
-        alert('Error al conectar con el servidor. Asegúrate de que el backend esté corriendo en http://localhost:8080');
+        alert('Error al conectar con el servidor. Por favor, espera 30-60 segundos e intenta de nuevo. El servidor gratuito puede tardar en despertar.');
     }
 }
 
