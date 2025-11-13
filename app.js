@@ -326,8 +326,13 @@ function actualizarSelectIngredientes() {
 
 // Agregar ingrediente a la receta
 document.getElementById('btnAgregarIngredienteReceta').addEventListener('click', () => {
+    console.log('Botón Agregar clickeado');
     const selectIngrediente = document.getElementById('selectIngredienteReceta');
     const cantidad = parseFloat(document.getElementById('cantidadIngredienteReceta').value);
+    
+    console.log('Select value:', selectIngrediente.value);
+    console.log('Cantidad:', cantidad);
+    console.log('Ingredientes disponibles:', ingredientes.length);
     
     if (!selectIngrediente.value || !cantidad || cantidad <= 0) {
         alert('Por favor selecciona un ingrediente y una cantidad válida.');
@@ -335,10 +340,14 @@ document.getElementById('btnAgregarIngredienteReceta').addEventListener('click',
     }
     
     const ingredienteId = selectIngrediente.value; // Dejar como string para MongoDB
+    console.log('Buscando ingrediente ID:', ingredienteId);
     const ingrediente = ingredientes.find(i => i.id === ingredienteId);
+    
+    console.log('Ingrediente encontrado:', ingrediente);
     
     if (!ingrediente) {
         alert('Ingrediente no encontrado.');
+        console.error('No se encontró el ingrediente con ID:', ingredienteId);
         return;
     }
     
@@ -349,6 +358,7 @@ document.getElementById('btnAgregarIngredienteReceta').addEventListener('click',
         return;
     }
     
+    console.log('Agregando ingrediente a la lista temporal');
     ingredientesRecetaTemp.push({
         ingredienteId: ingrediente.id,
         nombre: ingrediente.nombre,
@@ -357,6 +367,8 @@ document.getElementById('btnAgregarIngredienteReceta').addEventListener('click',
         costoPorUnidad: ingrediente.costoPorUnidad,
         costoTotal: cantidad * ingrediente.costoPorUnidad
     });
+    
+    console.log('Ingredientes en receta temp:', ingredientesRecetaTemp);
     
     document.getElementById('cantidadIngredienteReceta').value = '';
     selectIngrediente.value = '';
