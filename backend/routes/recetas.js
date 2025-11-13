@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Receta = require('../models/Receta');
+const Ingrediente = require('../models/Ingrediente');
 
 // GET - Obtener todas las recetas
 router.get('/', async (req, res) => {
@@ -28,7 +29,47 @@ router.get('/:id', async (req, res) => {
 // POST - Crear una nueva receta
 router.post('/', async (req, res) => {
     try {
-        const nuevaReceta = new Receta(req.body);
+        const { nombre, descripcion, porciones, ingredientes, costoEmpaquetado } = req.body;
+        
+        // Enriquecer ingredientes con datos de la base de datos
+        const ingredientesEnriquecidos = await Promise.all(
+            ingredientes.map(async (ing) => {
+                const ingredienteDB = await Ingrediente.findById(ing.ingredienteId);
+                if (!ingredienteDB) {
+                    throw new Error(`Ingrediente ${ing.nombre} no encontrado`);
+                }
+                
+                return {
+                    ingredienteId: ing.ingredienteId,
+                    nombre: ingredienteDB.nombre,
+                    cantidad: ingredienteDB.cantidad,
+                    unidad: ingredienteDB.unidad,
+                    costoTotal: ingredienteDB.costoTotal,
+                    costoPorUnidad: ingredienteDB.costoPorUnidad,
+                    cantidadUsada: ing.cantidadUsada
+                };
+            })
+        );
+        
+        // Calcular costos
+        const costoIngredientes = ingredientesEnriquecidos.reduce((sum, ing) => {
+            return sum + (ing.costoPorUnidad * ing.cantidadUsada);
+        }, 0);
+        
+        const costoTotal = costoIngredientes + (costoEmpaquetado || 0);
+        const costoPorPorcion = costoTotal / porciones;
+        
+        const nuevaReceta = new Receta({
+            nombre,
+            descripcion,
+            porciones,
+            ingredientes: ingredientesEnriquecidos,
+            costoEmpaquetado: costoEmpaquetado || 0,
+            costoIngredientes,
+            costoTotal,
+            costoPorPorcion
+        });
+        
         const recetaGuardada = await nuevaReceta.save();
         res.status(201).json(recetaGuardada);
     } catch (error) {
@@ -39,9 +80,48 @@ router.post('/', async (req, res) => {
 // PUT - Actualizar una receta
 router.put('/:id', async (req, res) => {
     try {
+        const { nombre, descripcion, porciones, ingredientes, costoEmpaquetado } = req.body;
+        
+        // Enriquecer ingredientes con datos de la base de datos
+        const ingredientesEnriquecidos = await Promise.all(
+            ingredientes.map(async (ing) => {
+                const ingredienteDB = await Ingrediente.findById(ing.ingredienteId);
+                if (!ingredienteDB) {
+                    throw new Error(`Ingrediente ${ing.nombre} no encontrado`);
+                }
+                
+                return {
+                    ingredienteId: ing.ingredienteId,
+                    nombre: ingredienteDB.nombre,
+                    cantidad: ingredienteDB.cantidad,
+                    unidad: ingredienteDB.unidad,
+                    costoTotal: ingredienteDB.costoTotal,
+                    costoPorUnidad: ingredienteDB.costoPorUnidad,
+                    cantidadUsada: ing.cantidadUsada
+                };
+            })
+        );
+        
+        // Calcular costos
+        const costoIngredientes = ingredientesEnriquecidos.reduce((sum, ing) => {
+            return sum + (ing.costoPorUnidad * ing.cantidadUsada);
+        }, 0);
+        
+        const costoTotal = costoIngredientes + (costoEmpaquetado || 0);
+        const costoPorPorcion = costoTotal / porciones;
+        
         const recetaActualizada = await Receta.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            {
+                nombre,
+                descripcion,
+                porciones,
+                ingredientes: ingredientesEnriquecidos,
+                costoEmpaquetado: costoEmpaquetado || 0,
+                costoIngredientes,
+                costoTotal,
+                costoPorPorcion
+            },
             { new: true, runValidators: true }
         );
         
