@@ -91,11 +91,16 @@ async function eliminarIngredienteAPI(id) {
 
 // Guardar receta en la API
 async function guardarReceta(receta) {
+    console.log('=== guardarReceta (función API) ===');
     try {
         const method = receta._id ? 'PUT' : 'POST';
         const url = receta._id 
             ? `${API_URL}/recetas/${receta._id}`
             : `${API_URL}/recetas`;
+        
+        console.log('Método:', method);
+        console.log('URL:', url);
+        console.log('Payload:', JSON.stringify(receta, null, 2));
         
         const response = await fetch(url, {
             method: method,
@@ -105,13 +110,20 @@ async function guardarReceta(receta) {
             body: JSON.stringify(receta)
         });
         
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
         if (!response.ok) {
-            throw new Error('Error al guardar receta');
+            const errorData = await response.text();
+            console.error('Error response:', errorData);
+            throw new Error('Error al guardar receta: ' + errorData);
         }
         
-        return await response.json();
+        const resultado = await response.json();
+        console.log('Receta guardada, respuesta:', resultado);
+        return resultado;
     } catch (error) {
-        console.error('Error al guardar receta:', error);
+        console.error('Error en guardarReceta:', error);
         throw error;
     }
 }
@@ -379,13 +391,18 @@ document.getElementById('btnAgregarIngredienteReceta').addEventListener('click',
 
 // Actualizar lista de ingredientes en la receta
 function actualizarListaIngredientesReceta() {
+    console.log('=== actualizarListaIngredientesReceta ===');
     const lista = document.getElementById('ingredientesListaReceta');
+    console.log('Elemento lista encontrado:', !!lista);
+    console.log('Ingredientes temp:', ingredientesRecetaTemp.length);
     
     if (ingredientesRecetaTemp.length === 0) {
+        console.log('Lista vacía, mostrando mensaje');
         lista.innerHTML = '<p class="empty-message">No hay ingredientes agregados a la receta.</p>';
         return;
     }
     
+    console.log('Renderizando', ingredientesRecetaTemp.length, 'ingredientes');
     lista.innerHTML = ingredientesRecetaTemp.map((ing, index) => `
         <div class="ingrediente-item">
             <span>${ing.nombre}: ${ing.cantidadUsada} ${ing.unidad}</span>
@@ -393,10 +410,12 @@ function actualizarListaIngredientesReceta() {
             <button type="button" class="btn-icon-small" onclick="eliminarIngredienteReceta(${index})">❌</button>
         </div>
     `).join('');
+    console.log('Lista actualizada con HTML');
 }
 
 // Eliminar ingrediente de la receta
 function eliminarIngredienteReceta(index) {
+    console.log('Eliminando ingrediente en índice:', index);
     ingredientesRecetaTemp.splice(index, 1);
     actualizarListaIngredientesReceta();
     calcularCostoTotalReceta();
@@ -407,6 +426,7 @@ document.getElementById('costoEmpaquetado').addEventListener('input', calcularCo
 document.getElementById('porcionesReceta').addEventListener('input', calcularCostoTotalReceta);
 
 function calcularCostoTotalReceta() {
+    console.log('=== calcularCostoTotalReceta ===');
     const costoIngredientes = ingredientesRecetaTemp.reduce((sum, ing) => sum + ing.costoTotal, 0);
     const costoEmpaquetado = parseFloat(document.getElementById('costoEmpaquetado').value) || 0;
     const porciones = parseFloat(document.getElementById('porcionesReceta').value) || 1;
@@ -414,15 +434,23 @@ function calcularCostoTotalReceta() {
     const costoTotal = costoIngredientes + costoEmpaquetado;
     const costoPorPorcion = costoTotal / porciones;
     
+    console.log('Costo ingredientes:', costoIngredientes);
+    console.log('Costo empaquetado:', costoEmpaquetado);
+    console.log('Porciones:', porciones);
+    console.log('Costo total:', costoTotal);
+    console.log('Costo por porción:', costoPorPorcion);
+    
     document.getElementById('costoTotalReceta').textContent = costoTotal.toFixed(2);
     document.getElementById('costoPorPorcion').textContent = costoPorPorcion.toFixed(2);
 }
 
 // Guardar receta
 formReceta.addEventListener('submit', async (e) => {
+    console.log('=== SUBMIT RECETA ===');
     e.preventDefault();
     
     if (ingredientesRecetaTemp.length === 0) {
+        console.log('Error: no hay ingredientes');
         alert('Debes agregar al menos un ingrediente a la receta.');
         return;
     }
@@ -431,6 +459,13 @@ formReceta.addEventListener('submit', async (e) => {
     const descripcion = document.getElementById('descripcionReceta').value;
     const porciones = parseFloat(document.getElementById('porcionesReceta').value);
     const costoEmpaquetado = parseFloat(document.getElementById('costoEmpaquetado').value) || 0;
+    
+    console.log('Datos del formulario:');
+    console.log('- Nombre:', nombre);
+    console.log('- Descripción:', descripcion);
+    console.log('- Porciones:', porciones);
+    console.log('- Costo empaquetado:', costoEmpaquetado);
+    console.log('- Ingredientes temp:', ingredientesRecetaTemp);
     
     // Enviar solo los campos requeridos por el backend
     // El backend calculará automáticamente los costos
@@ -445,27 +480,44 @@ formReceta.addEventListener('submit', async (e) => {
         costoEmpaquetado
     };
     
+    console.log('Objeto receta a enviar:', JSON.stringify(receta, null, 2));
+    
     if (recetaEditando) {
         receta._id = recetaEditando._id || recetaEditando.id;
+        console.log('Editando receta con ID:', receta._id);
+    } else {
+        console.log('Creando nueva receta');
     }
     
     try {
-        await guardarReceta(receta);
+        console.log('Llamando a guardarReceta...');
+        const resultado = await guardarReceta(receta);
+        console.log('Receta guardada exitosamente:', resultado);
+        
+        console.log('Recargando datos...');
         await cargarDatos();
+        console.log('Datos recargados');
+        
+        console.log('Cerrando modal y limpiando formulario');
         modalReceta.style.display = 'none';
         formReceta.reset();
         ingredientesRecetaTemp = [];
         recetaEditando = null;
+        console.log('Proceso completado exitosamente');
     } catch (error) {
+        console.error('Error al guardar receta:', error);
         alert('Error al guardar la receta. Verifica la conexión con el servidor.');
     }
 });
 
 // Renderizar recetas
 function renderizarRecetas() {
+    console.log('=== renderizarRecetas ===');
+    console.log('Total recetas:', recetas.length);
     const grid = document.getElementById('recetasGrid');
     
     if (recetas.length === 0) {
+        console.log('No hay recetas, mostrando mensaje vacío');
         grid.innerHTML = '<div class="empty-state-card"><p>No hay recetas registradas. ¡Crea tu primera receta!</p></div>';
         return;
     }
