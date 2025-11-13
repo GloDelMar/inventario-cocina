@@ -544,6 +544,11 @@ tbody tr:hover {
     color: var(--primary-color);
 }
 
+.valor-ganancia.negativa {
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
 .calculadora-personalizada {
     background: #f8f9fa;
     padding: 20px;

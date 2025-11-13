@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     
     try {
-        const { nombre, descripcion, porciones, ingredientes, costoEmpaquetado } = req.body;
+        const { nombre, descripcion, porciones, ingredientes, costoEmpaquetado, precioVenta } = req.body;
         
         console.log('Validando datos recibidos...');
         console.log('- Nombre:', nombre);
@@ -40,6 +40,7 @@ router.post('/', async (req, res) => {
         console.log('- Porciones:', porciones);
         console.log('- Ingredientes:', ingredientes ? ingredientes.length : 0);
         console.log('- Costo empaquetado:', costoEmpaquetado);
+        console.log('- Precio de venta:', precioVenta);
         
         if (!ingredientes || ingredientes.length === 0) {
             console.error('Error: No hay ingredientes');
@@ -98,7 +99,8 @@ router.post('/', async (req, res) => {
             costoEmpaquetado: costoEmpaquetado || 0,
             costoIngredientes,
             costoTotal,
-            costoPorPorcion
+            costoPorPorcion,
+            precioVenta: precioVenta || 0
         });
         
         console.log('Guardando receta en DB...');
@@ -120,7 +122,7 @@ router.put('/:id', async (req, res) => {
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     
     try {
-        const { nombre, descripcion, porciones, ingredientes, costoEmpaquetado } = req.body;
+        const { nombre, descripcion, porciones, ingredientes, costoEmpaquetado, precioVenta } = req.body;
         
         console.log('Validando datos recibidos...');
         console.log('- Nombre:', nombre);
@@ -128,6 +130,7 @@ router.put('/:id', async (req, res) => {
         console.log('- Porciones:', porciones);
         console.log('- Ingredientes:', ingredientes ? ingredientes.length : 0);
         console.log('- Costo empaquetado:', costoEmpaquetado);
+        console.log('- Precio de venta:', precioVenta);
         
         // Enriquecer ingredientes con datos de la base de datos
         console.log('Enriqueciendo ingredientes desde DB...');
@@ -182,7 +185,8 @@ router.put('/:id', async (req, res) => {
                 costoEmpaquetado: costoEmpaquetado || 0,
                 costoIngredientes,
                 costoTotal,
-                costoPorPorcion
+                costoPorPorcion,
+                precioVenta: precioVenta || 0
             },
             { new: true, runValidators: true }
         );

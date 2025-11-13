@@ -68,6 +68,11 @@ const recetaSchema = new mongoose.Schema({
         type: Number,
         required: true,
         min: 0
+    },
+    precioVenta: {
+        type: Number,
+        default: 0,
+        min: 0
     }
 }, {
     timestamps: true

@@ -524,12 +524,14 @@ formReceta.addEventListener('submit', async (e) => {
     const descripcion = document.getElementById('descripcionReceta').value;
     const porciones = parseFloat(document.getElementById('porcionesReceta').value);
     const costoEmpaquetado = parseFloat(document.getElementById('costoEmpaquetado').value) || 0;
+    const precioVenta = parseFloat(document.getElementById('precioVenta').value) || 0;
     
     console.log('Datos del formulario:');
     console.log('- Nombre:', nombre);
     console.log('- Descripción:', descripcion);
     console.log('- Porciones:', porciones);
     console.log('- Costo empaquetado:', costoEmpaquetado);
+    console.log('- Precio de venta:', precioVenta);
     console.log('- Ingredientes temp:', ingredientesRecetaTemp);
     
     // Enviar solo los campos requeridos por el backend
@@ -542,7 +544,8 @@ formReceta.addEventListener('submit', async (e) => {
             ingredienteId: ing.ingredienteId,
             cantidadUsada: ing.cantidadUsada
         })),
-        costoEmpaquetado
+        costoEmpaquetado,
+        precioVenta
     };
     
     console.log('Objeto receta a enviar:', JSON.stringify(receta, null, 2));
@@ -636,6 +639,7 @@ function editarReceta(id) {
     document.getElementById('descripcionReceta').value = recetaEditando.descripcion || '';
     document.getElementById('porcionesReceta').value = recetaEditando.porciones;
     document.getElementById('costoEmpaquetado').value = recetaEditando.costoEmpaquetado || 0;
+    document.getElementById('precioVenta').value = recetaEditando.precioVenta || 0;
     
     // Transformar ingredientes del backend al formato del frontend
     console.log('Transformando ingredientes del backend al formato correcto...');
@@ -684,45 +688,50 @@ function mostrarAnalisis() {
     }
     
     container.innerHTML = recetas.map(receta => {
+        const precioVentaActual = receta.precioVenta || 0;
         const precioVentaSugerido = receta.costoPorPorcion * 3; // Margen del 200%
-        const ganancia = precioVentaSugerido - receta.costoPorPorcion;
-        const margenPorcentaje = ((ganancia / precioVentaSugerido) * 100).toFixed(1);
+        const precioParaMostrar = precioVentaActual > 0 ? precioVentaActual : precioVentaSugerido;
+        const ganancia = precioParaMostrar - receta.costoPorPorcion;
+        const margenPorcentaje = precioParaMostrar > 0 ? ((ganancia / precioParaMostrar) * 100).toFixed(1) : 0;
         
         return `
             <div class="analisis-card">
                 <h3>${receta.nombre}</h3>
                 <div class="analisis-grid">
                     <div class="analisis-item">
-                        <label>Inversión por porción:</label>
+                        <label>Costo por porción:</label>
                         <span class="valor-costo">$${receta.costoPorPorcion.toFixed(2)}</span>
                     </div>
                     <div class="analisis-item">
-                        <label>Precio sugerido de venta:</label>
-                        <span class="valor-sugerido">$${precioVentaSugerido.toFixed(2)}</span>
-                        <small>(Margen 200%)</small>
+                        <label>${precioVentaActual > 0 ? 'Precio de venta configurado' : 'Precio sugerido de venta'}:</label>
+                        <span class="valor-sugerido">$${precioParaMostrar.toFixed(2)}</span>
+                        ${precioVentaActual === 0 ? '<small>(Margen 200%)</small>' : ''}
                     </div>
                     <div class="analisis-item">
                         <label>Ganancia por porción:</label>
-                        <span class="valor-ganancia">$${ganancia.toFixed(2)}</span>
+                        <span class="valor-ganancia ${ganancia < 0 ? 'negativa' : ''}">$${ganancia.toFixed(2)}</span>
                         <small>(${margenPorcentaje}% margen)</small>
                     </div>
                 </div>
                 
                 <div class="calculadora-personalizada">
-                    <h4>Calculadora Personalizada</h4>
+                    <h4>Calculadora de Ganancias</h4>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Precio de venta deseado ($):</label>
+                            <label>Precio de venta personalizado ($):</label>
                             <input type="number" step="0.01" 
                                    class="input-precio-venta" 
                                    data-receta-id="${receta.id}"
-                                   placeholder="${precioVentaSugerido.toFixed(2)}">
+                                   data-costo="${receta.costoPorPorcion}"
+                                   placeholder="${precioParaMostrar.toFixed(2)}"
+                                   value="${precioVentaActual > 0 ? precioVentaActual.toFixed(2) : ''}">
                         </div>
                         <div class="form-group">
                             <label>Porciones a vender:</label>
                             <input type="number" 
                                    class="input-porciones-vender" 
                                    data-receta-id="${receta.id}"
+                                   data-costo="${receta.costoPorPorcion}"
                                    value="1" min="1">
                         </div>
                     </div>
