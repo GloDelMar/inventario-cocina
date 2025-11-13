@@ -1,7 +1,27 @@
 // ============================================
 // GESTIÓN DE DATOS Y API
-// v1.1 - Fixed MongoDB ID handling for recipes
+// v2.0 - Multi-user authentication system
 // ============================================
+
+// Verificar autenticación al cargar la página
+const usuarioId = localStorage.getItem('usuarioId');
+const usuarioNombre = localStorage.getItem('usuarioNombre');
+
+if (!usuarioId || !usuarioNombre) {
+    window.location.href = 'login.html';
+}
+
+// Mostrar nombre del usuario
+document.getElementById('usuarioNombre').textContent = usuarioNombre;
+
+// Botón de logout
+document.getElementById('btnLogout').addEventListener('click', () => {
+    if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+        localStorage.removeItem('usuarioId');
+        localStorage.removeItem('usuarioNombre');
+        window.location.href = 'login.html';
+    }
+});
 
 const API_URL = 'https://inventario-cocina-backend.onrender.com/api';
 
@@ -15,10 +35,11 @@ let ingredientesRecetaTemp = [];
 async function cargarDatos() {
     console.log('=== CARGANDO DATOS ===');
     console.log('API_URL:', API_URL);
+    console.log('Usuario ID:', usuarioId);
     try {
-        // Cargar ingredientes
+        // Cargar ingredientes del usuario
         console.log('Fetching ingredientes...');
-        const resIngredientes = await fetch(`${API_URL}/ingredientes`);
+        const resIngredientes = await fetch(`${API_URL}/ingredientes?usuarioId=${usuarioId}`);
         console.log('Response ingredientes status:', resIngredientes.status);
         
         if (resIngredientes.ok) {
@@ -33,9 +54,9 @@ async function cargarDatos() {
             console.error('Error al cargar ingredientes:', resIngredientes.status);
         }
         
-        // Cargar recetas
+        // Cargar recetas del usuario
         console.log('Fetching recetas...');
-        const resRecetas = await fetch(`${API_URL}/recetas`);
+        const resRecetas = await fetch(`${API_URL}/recetas?usuarioId=${usuarioId}`);
         console.log('Response recetas status:', resRecetas.status);
         
         if (resRecetas.ok) {
@@ -236,6 +257,7 @@ formIngrediente.addEventListener('submit', async (e) => {
     const costoPorUnidad = costoTotal / cantidad;
     
     const ingrediente = {
+        usuarioId,
         nombre,
         cantidad,
         unidad,
@@ -537,6 +559,7 @@ formReceta.addEventListener('submit', async (e) => {
     // Enviar solo los campos requeridos por el backend
     // El backend calculará automáticamente los costos
     const receta = {
+        usuarioId,
         nombre,
         descripcion,
         porciones,

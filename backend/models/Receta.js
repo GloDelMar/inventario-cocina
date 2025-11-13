@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const recetaSchema = new mongoose.Schema({
+    usuarioId: {
+        type: String,
+        required: true,
+        index: true
+    },
     nombre: {
         type: String,
         required: true,

@@ -46,9 +46,11 @@ mongoose.connect(MONGODB_URI)
     });
 
 // Rutas
+const authRoutes = require('./routes/auth');
 const ingredientesRoutes = require('./routes/ingredientes');
 const recetasRoutes = require('./routes/recetas');
 
+app.use('/api/auth', authRoutes);
 app.use('/api/ingredientes', ingredientesRoutes);
 app.use('/api/recetas', recetasRoutes);
 
@@ -93,6 +95,7 @@ app.listen(PORT, () => {
     console.log(`📊 Ambiente: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
     console.log('\n📝 Endpoints disponibles:');
+    console.log(`   - POST        http://localhost:${PORT}/api/auth/login`);
     console.log(`   - GET/POST    http://localhost:${PORT}/api/ingredientes`);
     console.log(`   - GET/PUT/DEL http://localhost:${PORT}/api/ingredientes/:id`);
     console.log(`   - GET/POST    http://localhost:${PORT}/api/recetas`);

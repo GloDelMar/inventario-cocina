@@ -1,0 +1,22 @@
+[
+    { "nombre": "Irvin", "password": "irvin123" },
+    { "nombre": "Aarón", "password": "aaron123" },
+    { "nombre": "Alejandra", "password": "ale123" },
+    { "nombre": "Pablo", "password": "pablo123" },
+    { "nombre": "Erick", "password": "erick123" },
+    { "nombre": "Edward", "password": "edward123" },
+    { "nombre": "Juan Alberto", "password": "juanalb123" },
+    { "nombre": "Ignacio", "password": "nacho123" },
+    { "nombre": "Santiago", "password": "santi123" },
+    { "nombre": "Mateo", "password": "mateo123" },
+    { "nombre": "Jean Paul", "password": "jean123" },
+    { "nombre": "Juan de Jesús", "password": "juanjes123" },
+    { "nombre": "Ashley", "password": "ashley123" },
+    { "nombre": "Ángel", "password": "angel123" },
+    { "nombre": "Krystal", "password": "krystal123" },
+    { "nombre": "Romina", "password": "romina123" },
+    { "nombre": "Raúl", "password": "raul123" },
+    { "nombre": "Brianda", "password": "brianda123" },
+    { "nombre": "Maestra Gloriela", "password": "gloriela123" },
+    { "nombre": "Maestra Carito", "password": "carito123" }
+]

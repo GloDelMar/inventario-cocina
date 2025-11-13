@@ -6,7 +6,9 @@ const Ingrediente = require('../models/Ingrediente');
 // GET - Obtener todas las recetas
 router.get('/', async (req, res) => {
     try {
-        const recetas = await Receta.find().sort({ createdAt: -1 });
+        const { usuarioId } = req.query;
+        const filtro = usuarioId ? { usuarioId } : {};
+        const recetas = await Receta.find(filtro).sort({ createdAt: -1 });
         res.json(recetas);
     } catch (error) {
         res.status(500).json({ message: 'Error al obtener recetas', error: error.message });
