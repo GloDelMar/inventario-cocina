@@ -13,31 +13,47 @@ let ingredientesRecetaTemp = [];
 
 // Cargar datos desde la API
 async function cargarDatos() {
+    console.log('=== CARGANDO DATOS ===');
+    console.log('API_URL:', API_URL);
     try {
         // Cargar ingredientes
+        console.log('Fetching ingredientes...');
         const resIngredientes = await fetch(`${API_URL}/ingredientes`);
+        console.log('Response ingredientes status:', resIngredientes.status);
+        
         if (resIngredientes.ok) {
-            ingredientes = await resIngredientes.json();
-            // Convertir _id de MongoDB a id para compatibilidad
-            ingredientes = ingredientes.map(ing => ({
+            const data = await resIngredientes.json();
+            console.log('Ingredientes recibidos:', data.length);
+            ingredientes = data.map(ing => ({
                 ...ing,
                 id: ing._id
             }));
+            console.log('Ingredientes procesados:', ingredientes.length);
+        } else {
+            console.error('Error al cargar ingredientes:', resIngredientes.status);
         }
         
         // Cargar recetas
+        console.log('Fetching recetas...');
         const resRecetas = await fetch(`${API_URL}/recetas`);
+        console.log('Response recetas status:', resRecetas.status);
+        
         if (resRecetas.ok) {
-            recetas = await resRecetas.json();
-            // Convertir _id de MongoDB a id para compatibilidad
-            recetas = recetas.map(rec => ({
+            const data = await resRecetas.json();
+            console.log('Recetas recibidas:', data.length);
+            recetas = data.map(rec => ({
                 ...rec,
                 id: rec._id
             }));
+            console.log('Recetas procesadas:', recetas.length);
+        } else {
+            console.error('Error al cargar recetas:', resRecetas.status);
         }
         
+        console.log('Renderizando ingredientes y recetas...');
         renderizarIngredientes();
         renderizarRecetas();
+        console.log('=== CARGA COMPLETADA ===');
     } catch (error) {
         console.error('Error al cargar datos:', error);
         alert('Error al conectar con el servidor. Por favor, espera 30-60 segundos e intenta de nuevo. El servidor gratuito puede tardar en despertar.');
