@@ -322,87 +322,126 @@ const closeReceta = document.getElementById('closeReceta');
 
 // Abrir modal para nueva receta
 btnNuevaReceta.addEventListener('click', () => {
+    console.log('=== ABRIR MODAL NUEVA RECETA ===');
+    console.log('Ingredientes disponibles:', ingredientes.length);
+    
     if (ingredientes.length === 0) {
+        console.log('ERROR: No hay ingredientes disponibles');
         alert('Primero debes agregar ingredientes antes de crear una receta.');
         return;
     }
     
+    console.log('Inicializando modal...');
     recetaEditando = null;
     ingredientesRecetaTemp = [];
     formReceta.reset();
     document.getElementById('tituloModalReceta').textContent = 'Nueva Receta';
+    
+    console.log('Actualizando select de ingredientes...');
     actualizarSelectIngredientes();
+    
+    console.log('Actualizando lista de ingredientes (vacía)...');
     actualizarListaIngredientesReceta();
+    
+    console.log('Mostrando modal...');
     modalReceta.style.display = 'block';
+    console.log('Modal abierto correctamente');
 });
 
 // Cerrar modal
 closeReceta.addEventListener('click', () => {
+    console.log('=== CERRAR MODAL (X) ===');
     modalReceta.style.display = 'none';
+    console.log('Modal cerrado');
 });
 
 btnCancelarReceta.addEventListener('click', () => {
+    console.log('=== CERRAR MODAL (Cancelar) ===');
     modalReceta.style.display = 'none';
+    console.log('Modal cerrado');
 });
 
 // Actualizar select de ingredientes
 function actualizarSelectIngredientes() {
+    console.log('=== actualizarSelectIngredientes ===');
     const select = document.getElementById('selectIngredienteReceta');
+    console.log('Select element:', select ? 'encontrado' : 'NO ENCONTRADO');
+    console.log('Ingredientes a mostrar:', ingredientes.length);
+    
     select.innerHTML = '<option value="">Seleccionar ingrediente...</option>' +
         ingredientes.map(ing => `<option value="${ing.id}">${ing.nombre} (${ing.unidad})</option>`).join('');
+    
+    console.log('Select actualizado con', ingredientes.length, 'opciones');
 }
 
 // Agregar ingrediente a la receta
 document.getElementById('btnAgregarIngredienteReceta').addEventListener('click', () => {
-    console.log('Botón Agregar clickeado');
+    console.log('=== AGREGAR INGREDIENTE A RECETA ===');
     const selectIngrediente = document.getElementById('selectIngredienteReceta');
-    const cantidad = parseFloat(document.getElementById('cantidadIngredienteReceta').value);
+    const inputCantidad = document.getElementById('cantidadIngredienteReceta');
+    const cantidad = parseFloat(inputCantidad.value);
     
+    console.log('Select element:', selectIngrediente ? 'encontrado' : 'NO ENCONTRADO');
+    console.log('Input cantidad element:', inputCantidad ? 'encontrado' : 'NO ENCONTRADO');
     console.log('Select value:', selectIngrediente.value);
-    console.log('Cantidad:', cantidad);
+    console.log('Cantidad ingresada:', cantidad);
     console.log('Ingredientes disponibles:', ingredientes.length);
+    console.log('Ingredientes en receta actual:', ingredientesRecetaTemp.length);
     
     if (!selectIngrediente.value || !cantidad || cantidad <= 0) {
+        console.log('Validación falló - datos incompletos o inválidos');
         alert('Por favor selecciona un ingrediente y una cantidad válida.');
         return;
     }
     
     const ingredienteId = selectIngrediente.value; // Dejar como string para MongoDB
-    console.log('Buscando ingrediente ID:', ingredienteId);
+    console.log('ID del ingrediente seleccionado:', ingredienteId);
+    console.log('Buscando ingrediente en array...');
     const ingrediente = ingredientes.find(i => i.id === ingredienteId);
     
-    console.log('Ingrediente encontrado:', ingrediente);
+    console.log('Resultado búsqueda:', ingrediente ? `encontrado: ${ingrediente.nombre}` : 'NO ENCONTRADO');
     
     if (!ingrediente) {
+        console.error('ERROR: Ingrediente no encontrado con ID:', ingredienteId);
+        console.error('IDs disponibles:', ingredientes.map(i => i.id));
         alert('Ingrediente no encontrado.');
-        console.error('No se encontró el ingrediente con ID:', ingredienteId);
         return;
     }
     
     // Verificar si ya existe
+    console.log('Verificando si el ingrediente ya está en la receta...');
     const existente = ingredientesRecetaTemp.find(i => i.ingredienteId === ingredienteId);
     if (existente) {
+        console.log('El ingrediente ya existe en la receta');
         alert('Este ingrediente ya está en la receta. Elimínalo primero si quieres cambiar la cantidad.');
         return;
     }
     
-    console.log('Agregando ingrediente a la lista temporal');
-    ingredientesRecetaTemp.push({
+    console.log('Agregando ingrediente a la lista temporal...');
+    const nuevoIngrediente = {
         ingredienteId: ingrediente.id,
         nombre: ingrediente.nombre,
         cantidadUsada: cantidad, // Cambiar a cantidadUsada para coincidir con el backend
         unidad: ingrediente.unidad,
         costoPorUnidad: ingrediente.costoPorUnidad,
         costoTotal: cantidad * ingrediente.costoPorUnidad
-    });
+    };
     
+    console.log('Nuevo ingrediente creado:', nuevoIngrediente);
+    ingredientesRecetaTemp.push(nuevoIngrediente);
+    console.log('Ingrediente agregado. Total en receta:', ingredientesRecetaTemp.length);
     console.log('Ingredientes en receta temp:', ingredientesRecetaTemp);
     
+    console.log('Limpiando campos del formulario...');
     document.getElementById('cantidadIngredienteReceta').value = '';
     selectIngrediente.value = '';
     
+    console.log('Actualizando vista de lista...');
     actualizarListaIngredientesReceta();
+    
+    console.log('Recalculando costos...');
     calcularCostoTotalReceta();
+    console.log('Ingrediente agregado exitosamente');
 });
 
 // Actualizar lista de ingredientes en la receta
@@ -431,10 +470,20 @@ function actualizarListaIngredientesReceta() {
 
 // Eliminar ingrediente de la receta
 function eliminarIngredienteReceta(index) {
-    console.log('Eliminando ingrediente en índice:', index);
+    console.log('=== ELIMINAR INGREDIENTE DE RECETA ===');
+    console.log('Índice a eliminar:', index);
+    console.log('Total ingredientes antes:', ingredientesRecetaTemp.length);
+    console.log('Ingrediente a eliminar:', ingredientesRecetaTemp[index]);
+    
     ingredientesRecetaTemp.splice(index, 1);
+    
+    console.log('Total ingredientes después:', ingredientesRecetaTemp.length);
+    console.log('Actualizando lista...');
     actualizarListaIngredientesReceta();
+    
+    console.log('Recalculando costos...');
     calcularCostoTotalReceta();
+    console.log('Ingrediente eliminado exitosamente');
 }
 
 // Calcular costo total de la receta
