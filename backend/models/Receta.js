@@ -29,6 +29,11 @@ const recetaSchema = new mongoose.Schema({
             required: true,
             min: 0
         },
+        cantidadUsada: {
+            type: Number,
+            required: true,
+            min: 0
+        },
         unidad: {
             type: String,
             required: true
