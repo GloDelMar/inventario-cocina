@@ -623,15 +623,34 @@ function editarReceta(id) {
     console.log('ID recibido:', id, 'tipo:', typeof id);
     recetaEditando = recetas.find(r => r.id === id);
     console.log('Receta encontrada:', recetaEditando ? 'SÍ' : 'NO');
-    if (!recetaEditando) return;
+    if (!recetaEditando) {
+        console.error('No se encontró la receta con ID:', id);
+        console.error('IDs disponibles:', recetas.map(r => r.id));
+        return;
+    }
+    
+    console.log('Receta completa:', recetaEditando);
     
     document.getElementById('tituloModalReceta').textContent = 'Editar Receta';
     document.getElementById('nombreReceta').value = recetaEditando.nombre;
-    document.getElementById('descripcionReceta').value = recetaEditando.descripcion;
+    document.getElementById('descripcionReceta').value = recetaEditando.descripcion || '';
     document.getElementById('porcionesReceta').value = recetaEditando.porciones;
-    document.getElementById('costoEmpaquetado').value = recetaEditando.costoEmpaquetado;
+    document.getElementById('costoEmpaquetado').value = recetaEditando.costoEmpaquetado || 0;
     
-    ingredientesRecetaTemp = [...recetaEditando.ingredientes];
+    // Transformar ingredientes del backend al formato del frontend
+    console.log('Transformando ingredientes del backend al formato correcto...');
+    ingredientesRecetaTemp = recetaEditando.ingredientes.map(ing => {
+        console.log('Ingrediente del backend:', ing);
+        return {
+            ingredienteId: ing.ingredienteId,
+            nombre: ing.nombre,
+            cantidadUsada: ing.cantidadUsada,
+            unidad: ing.unidad,
+            costoPorUnidad: ing.costoPorUnidad,
+            costoTotal: ing.cantidadUsada * ing.costoPorUnidad  // Calcular correctamente el costo
+        };
+    });
+    console.log('Ingredientes transformados:', ingredientesRecetaTemp);
     
     actualizarSelectIngredientes();
     actualizarListaIngredientesReceta();
