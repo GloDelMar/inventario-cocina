@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/inventario-cocina';
 
-// Middlewares - CORS con múltiples orígenes permitidos
+// Middlewares - CORS con múltiples orígenes permitidos...
 const allowedOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
