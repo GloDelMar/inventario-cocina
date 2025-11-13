@@ -2,7 +2,7 @@
 // GESTIÓN DE DATOS Y API
 // ============================================
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'https://inventario-cocina-backend.onrender.com/api';
 
 let ingredientes = [];
 let recetas = [];
