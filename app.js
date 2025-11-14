@@ -94,6 +94,32 @@ function convertirUnidad(cantidadReceta, unidadReceta, ingrediente) {
         return cantidadReceta / 1000;
     }
     
+    // Conversiones especiales: cucharadas/cucharaditas a litros (pasando por ml)
+    if ((unidadReceta === 'cucharada' || unidadReceta === 'cucharadita' || unidadReceta === 'taza') && unidadIngrediente === 'l') {
+        // Primero convertir a ml, luego a litros
+        let cantidadEnMl = 0;
+        if (unidadReceta === 'taza') cantidadEnMl = cantidadReceta * 240;
+        else if (unidadReceta === 'cucharada') cantidadEnMl = cantidadReceta * 15;
+        else if (unidadReceta === 'cucharadita') cantidadEnMl = cantidadReceta * 5;
+        
+        const cantidadEnLitros = cantidadEnMl / 1000;
+        console.log(`Conversión en 2 pasos: ${cantidadReceta} ${unidadReceta} → ${cantidadEnMl}ml → ${cantidadEnLitros}l`);
+        return cantidadEnLitros;
+    }
+    
+    // Conversiones especiales: cucharadas/cucharaditas a kilogramos (pasando por gramos)
+    if ((unidadReceta === 'cucharada' || unidadReceta === 'cucharadita' || unidadReceta === 'taza') && unidadIngrediente === 'kg') {
+        // Primero convertir a g, luego a kg
+        let cantidadEnGramos = 0;
+        if (unidadReceta === 'taza') cantidadEnGramos = cantidadReceta * 240;
+        else if (unidadReceta === 'cucharada') cantidadEnGramos = cantidadReceta * 15;
+        else if (unidadReceta === 'cucharadita') cantidadEnGramos = cantidadReceta * 5;
+        
+        const cantidadEnKg = cantidadEnGramos / 1000;
+        console.log(`Conversión en 2 pasos: ${cantidadReceta} ${unidadReceta} → ${cantidadEnGramos}g → ${cantidadEnKg}kg`);
+        return cantidadEnKg;
+    }
+    
     // Si no hay conversión posible, mostrar error
     console.error(`No se puede convertir ${unidadReceta} a ${unidadIngrediente}`);
     alert(`No se puede convertir ${unidadReceta} a ${unidadIngrediente}. Verifica las unidades.`);
