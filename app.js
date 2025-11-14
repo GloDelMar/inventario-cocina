@@ -24,7 +24,7 @@ document.getElementById('btnLogout').addEventListener('click', () => {
     }
 });
 
-const API_URL = 'https://inventario-cocina-backend.onrender.com/api';
+const API_URL = 'https://inventario-cocina-backend.fly.dev/api';
 
 let ingredientes = [];
 let recetas = [];
