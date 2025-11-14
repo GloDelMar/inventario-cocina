@@ -30,12 +30,13 @@ router.get('/:id', async (req, res) => {
 // POST - Crear un nuevo ingrediente
 router.post('/', async (req, res) => {
     try {
-        const { nombre, cantidad, unidad, costoTotal } = req.body;
+        const { usuarioId, nombre, cantidad, unidad, costoTotal } = req.body;
         
         // Calcular costo por unidad
         const costoPorUnidad = costoTotal / cantidad;
         
         const nuevoIngrediente = new Ingrediente({
+            usuarioId,
             nombre,
             cantidad,
             unidad,
@@ -53,14 +54,14 @@ router.post('/', async (req, res) => {
 // PUT - Actualizar un ingrediente
 router.put('/:id', async (req, res) => {
     try {
-        const { nombre, cantidad, unidad, costoTotal } = req.body;
+        const { usuarioId, nombre, cantidad, unidad, costoTotal } = req.body;
         
         // Calcular costo por unidad
         const costoPorUnidad = costoTotal / cantidad;
         
         const ingredienteActualizado = await Ingrediente.findByIdAndUpdate(
             req.params.id,
-            { nombre, cantidad, unidad, costoTotal, costoPorUnidad },
+            { usuarioId, nombre, cantidad, unidad, costoTotal, costoPorUnidad },
             { new: true, runValidators: true }
         );
         
