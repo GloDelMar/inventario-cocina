@@ -9,6 +9,7 @@ const usuarioNombre = localStorage.getItem('usuarioNombre');
 
 if (!usuarioId || !usuarioNombre) {
     window.location.href = 'login.html';
+    throw new Error('No autenticado'); // Detener ejecución
 }
 
 // Mostrar nombre del usuario
