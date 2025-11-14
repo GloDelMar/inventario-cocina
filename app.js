@@ -678,7 +678,9 @@ formReceta.addEventListener('submit', async (e) => {
         porciones,
         ingredientes: ingredientesRecetaTemp.map(ing => ({
             ingredienteId: ing.ingredienteId,
-            cantidadUsada: ing.cantidadUsada
+            cantidadUsada: ing.cantidadUsada,
+            cantidadReceta: ing.cantidadReceta || ing.cantidadUsada,
+            unidadReceta: ing.unidadReceta || ing.unidad
         })),
         costoEmpaquetado,
         precioVenta
