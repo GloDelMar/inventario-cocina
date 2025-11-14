@@ -392,8 +392,8 @@ function renderizarIngredientes() {
             <td>$${ing.costoTotal.toFixed(2)}</td>
             <td>$${ing.costoPorUnidad.toFixed(2)}</td>
             <td class="acciones">
-                <button class="btn-icon" onclick="editarIngrediente(${ing.id})" title="Editar">✏️</button>
-                <button class="btn-icon" onclick="eliminarIngrediente(${ing.id})" title="Eliminar">🗑️</button>
+                <button class="btn-icon" onclick="editarIngrediente('${ing.id}')" title="Editar">✏️</button>
+                <button class="btn-icon" onclick="eliminarIngrediente('${ing.id}')" title="Eliminar">🗑️</button>
             </td>
         </tr>
     `).join('');
@@ -401,7 +401,7 @@ function renderizarIngredientes() {
 
 // Editar ingrediente
 function editarIngrediente(id) {
-    ingredienteEditando = ingredientes.find(i => i.id === id);
+    ingredienteEditando = ingredientes.find(i => i.id === id || i._id === id);
     if (!ingredienteEditando) return;
     
     document.getElementById('tituloModalIngrediente').textContent = 'Editar Ingrediente';
