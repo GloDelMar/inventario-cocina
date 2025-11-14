@@ -1,0 +1,22 @@
+name: Keep Render Backend Alive
+
+on:
+  schedule:
+    # Ejecutar cada 10 minutos (Render se duerme después de 15 minutos)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Backend
+        run: |
+          echo "Haciendo ping al backend de Render..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://inventario-cocina-backend.onrender.com/api/health)
+          echo "Estado HTTP: $response"
+          if [ $response -eq 200 ]; then
+            echo "✅ Backend está activo y respondiendo"
+          else
+            echo "⚠️ Backend respondió con código: $response"
+          fi
