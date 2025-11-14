@@ -400,7 +400,10 @@ tbody tr:hover {
 .receta-descripcion {
     color: var(--gray);
     margin-bottom: 15px;
-    line-height: 1.5;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 0.95rem;
 }
 
 .receta-info {
