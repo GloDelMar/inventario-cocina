@@ -925,10 +925,12 @@ function mostrarAnalisis() {
     document.querySelectorAll('.input-precio-venta, .input-porciones-vender').forEach(input => {
         input.addEventListener('input', function() {
             const recetaId = this.dataset.recetaId;
+            console.log('Input event - recetaId:', recetaId);
             calcularGananciasPersonalizadas(recetaId);
         });
         input.addEventListener('change', function() {
             const recetaId = this.dataset.recetaId;
+            console.log('Change event - recetaId:', recetaId);
             calcularGananciasPersonalizadas(recetaId);
         });
     });
@@ -940,11 +942,18 @@ function mostrarAnalisis() {
 }
 
 function calcularGananciasPersonalizadas(recetaId) {
+    console.log('=== calcularGananciasPersonalizadas ===');
+    console.log('recetaId recibido:', recetaId, 'tipo:', typeof recetaId);
+    console.log('Total recetas:', recetas.length);
+    console.log('IDs disponibles:', recetas.map(r => r.id));
+    
     const receta = recetas.find(r => r.id === recetaId);
+    console.log('Receta encontrada:', receta ? receta.nombre : 'NO ENCONTRADA');
     if (!receta) return;
     
     const precioVentaInput = document.querySelector(`.input-precio-venta[data-receta-id="${recetaId}"]`);
     const porcionesInput = document.querySelector(`.input-porciones-vender[data-receta-id="${recetaId}"]`);
+    console.log('Inputs encontrados:', !!precioVentaInput, !!porcionesInput);
     
     const precioVenta = parseFloat(precioVentaInput.value) || (receta.costoPorPorcion * 3);
     const porciones = parseInt(porcionesInput.value) || 1;
