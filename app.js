@@ -131,6 +131,7 @@ async function cargarDatos() {
     console.log('=== CARGANDO DATOS ===');
     console.log('API_URL:', API_URL);
     console.log('Usuario ID:', usuarioId);
+    console.log('Usuario Nombre:', usuarioNombre);
     try {
         // Cargar ingredientes del usuario
         console.log('Fetching ingredientes...');
@@ -140,6 +141,7 @@ async function cargarDatos() {
         if (resIngredientes.ok) {
             const data = await resIngredientes.json();
             console.log('Ingredientes recibidos:', data.length);
+            console.log('Primeros ingredientes:', data.slice(0, 3));
             ingredientes = data.map(ing => ({
                 ...ing,
                 id: ing._id
@@ -147,6 +149,8 @@ async function cargarDatos() {
             console.log('Ingredientes procesados:', ingredientes.length);
         } else {
             console.error('Error al cargar ingredientes:', resIngredientes.status);
+            const errorText = await resIngredientes.text();
+            console.error('Error response:', errorText);
         }
         
         // Cargar recetas del usuario
@@ -157,6 +161,7 @@ async function cargarDatos() {
         if (resRecetas.ok) {
             const data = await resRecetas.json();
             console.log('Recetas recibidas:', data.length);
+            console.log('Primeras recetas:', data.slice(0, 3));
             recetas = data.map(rec => ({
                 ...rec,
                 id: rec._id
@@ -164,6 +169,8 @@ async function cargarDatos() {
             console.log('Recetas procesadas:', recetas.length);
         } else {
             console.error('Error al cargar recetas:', resRecetas.status);
+            const errorText = await resRecetas.text();
+            console.error('Error response:', errorText);
         }
         
         console.log('Renderizando ingredientes y recetas...');
