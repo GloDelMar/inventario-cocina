@@ -751,7 +751,7 @@ function renderizarRecetas() {
                 <summary>Ver ingredientes (${receta.ingredientes.length})</summary>
                 <ul>
                     ${receta.ingredientes.map(ing => `
-                        <li>${ing.nombre}: ${ing.cantidad} ${ing.unidad} - $${ing.costoTotal.toFixed(2)}</li>
+                        <li>${ing.nombre}: ${ing.cantidadReceta || ing.cantidadUsada} ${ing.unidadReceta || ing.unidad} - $${(ing.costoPorUnidad * ing.cantidadUsada).toFixed(2)}</li>
                     `).join('')}
                     ${receta.costoEmpaquetado > 0 ? `<li>Empaquetado: $${receta.costoEmpaquetado.toFixed(2)}</li>` : ''}
                 </ul>
