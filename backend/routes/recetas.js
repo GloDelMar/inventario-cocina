@@ -34,9 +34,10 @@ router.post('/', async (req, res) => {
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     
     try {
-        const { nombre, descripcion, porciones, ingredientes, costoEmpaquetado, precioVenta } = req.body;
+        const { usuarioId, nombre, descripcion, porciones, ingredientes, costoEmpaquetado, precioVenta } = req.body;
         
         console.log('Validando datos recibidos...');
+        console.log('- Usuario ID:', usuarioId);
         console.log('- Nombre:', nombre);
         console.log('- Descripción:', descripcion);
         console.log('- Porciones:', porciones);
@@ -96,6 +97,7 @@ router.post('/', async (req, res) => {
         console.log('  Costo por porción:', costoPorPorcion);
         
         const nuevaReceta = new Receta({
+            usuarioId,
             nombre,
             descripcion,
             porciones,
@@ -126,9 +128,10 @@ router.put('/:id', async (req, res) => {
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     
     try {
-        const { nombre, descripcion, porciones, ingredientes, costoEmpaquetado, precioVenta } = req.body;
+        const { usuarioId, nombre, descripcion, porciones, ingredientes, costoEmpaquetado, precioVenta } = req.body;
         
         console.log('Validando datos recibidos...');
+        console.log('- Usuario ID:', usuarioId);
         console.log('- Nombre:', nombre);
         console.log('- Descripción:', descripcion);
         console.log('- Porciones:', porciones);
@@ -156,7 +159,9 @@ router.put('/:id', async (req, res) => {
                     unidad: ingredienteDB.unidad,
                     costoTotal: ingredienteDB.costoTotal,
                     costoPorUnidad: ingredienteDB.costoPorUnidad,
-                    cantidadUsada: ing.cantidadUsada
+                    cantidadUsada: ing.cantidadUsada,
+                    cantidadReceta: ing.cantidadReceta || ing.cantidadUsada,
+                    unidadReceta: ing.unidadReceta || ingredienteDB.unidad
                 };
             })
         );
@@ -182,6 +187,7 @@ router.put('/:id', async (req, res) => {
         const recetaActualizada = await Receta.findByIdAndUpdate(
             req.params.id,
             {
+                usuarioId,
                 nombre,
                 descripcion,
                 porciones,
