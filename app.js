@@ -920,6 +920,15 @@ function mostrarAnalisis() {
             const recetaId = parseInt(this.dataset.recetaId);
             calcularGananciasPersonalizadas(recetaId);
         });
+        input.addEventListener('change', function() {
+            const recetaId = parseInt(this.dataset.recetaId);
+            calcularGananciasPersonalizadas(recetaId);
+        });
+    });
+    
+    // Calcular ganancias iniciales para todas las recetas
+    recetas.forEach(receta => {
+        calcularGananciasPersonalizadas(receta.id);
     });
 }
 
