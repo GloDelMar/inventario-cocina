@@ -69,7 +69,9 @@ router.post('/', async (req, res) => {
                     unidad: ingredienteDB.unidad,
                     costoTotal: ingredienteDB.costoTotal,
                     costoPorUnidad: ingredienteDB.costoPorUnidad,
-                    cantidadUsada: ing.cantidadUsada
+                    cantidadUsada: ing.cantidadUsada,
+                    cantidadReceta: ing.cantidadReceta || ing.cantidadUsada,
+                    unidadReceta: ing.unidadReceta || ingredienteDB.unidad
                 };
             })
         );

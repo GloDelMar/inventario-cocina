@@ -32,6 +32,74 @@ let ingredienteEditando = null;
 let recetaEditando = null;
 let ingredientesRecetaTemp = [];
 
+// ============================================
+// TABLA DE EQUIVALENCIAS DE UNIDADES
+// ============================================
+const EQUIVALENCIAS = {
+    // Conversiones a gramos (para ingredientes en kg, g)
+    'taza-g': { factor: 240, ingredienteUnidad: 'g' },      // 1 taza = 240g (harina promedio)
+    'kg-g': { factor: 1000, ingredienteUnidad: 'g' },        // 1 kg = 1000g
+    'cucharada-g': { factor: 15, ingredienteUnidad: 'g' },   // 1 cucharada = 15g
+    'cucharadita-g': { factor: 5, ingredienteUnidad: 'g' },  // 1 cucharadita = 5g
+    
+    // Conversiones a mililitros (para ingredientes en l, ml)
+    'taza-ml': { factor: 240, ingredienteUnidad: 'ml' },     // 1 taza = 240ml
+    'l-ml': { factor: 1000, ingredienteUnidad: 'ml' },       // 1 litro = 1000ml
+    'cucharada-ml': { factor: 15, ingredienteUnidad: 'ml' }, // 1 cucharada = 15ml
+    'cucharadita-ml': { factor: 5, ingredienteUnidad: 'ml' },// 1 cucharadita = 5ml
+    
+    // Unidades iguales (sin conversión)
+    'g-g': { factor: 1, ingredienteUnidad: 'g' },
+    'kg-kg': { factor: 1, ingredienteUnidad: 'kg' },
+    'ml-ml': { factor: 1, ingredienteUnidad: 'ml' },
+    'l-l': { factor: 1, ingredienteUnidad: 'l' },
+    'unidad-unidad': { factor: 1, ingredienteUnidad: 'unidad' },
+    'pza-pza': { factor: 1, ingredienteUnidad: 'pza' }
+};
+
+// Función para convertir unidades
+function convertirUnidad(cantidadReceta, unidadReceta, ingrediente) {
+    const unidadIngrediente = ingrediente.unidad;
+    const clave = `${unidadReceta}-${unidadIngrediente}`;
+    
+    console.log(`Convirtiendo: ${cantidadReceta} ${unidadReceta} a ${unidadIngrediente}`);
+    console.log(`Clave de conversión: ${clave}`);
+    
+    // Si las unidades son iguales, no hay conversión
+    if (unidadReceta === unidadIngrediente) {
+        console.log('Unidades iguales, sin conversión');
+        return cantidadReceta;
+    }
+    
+    // Buscar equivalencia directa
+    if (EQUIVALENCIAS[clave]) {
+        const cantidadConvertida = cantidadReceta * EQUIVALENCIAS[clave].factor;
+        console.log(`Conversión directa: ${cantidadReceta} × ${EQUIVALENCIAS[clave].factor} = ${cantidadConvertida}`);
+        return cantidadConvertida;
+    }
+    
+    // Conversión kg ↔ g
+    if (unidadReceta === 'kg' && unidadIngrediente === 'g') {
+        return cantidadReceta * 1000;
+    }
+    if (unidadReceta === 'g' && unidadIngrediente === 'kg') {
+        return cantidadReceta / 1000;
+    }
+    
+    // Conversión l ↔ ml
+    if (unidadReceta === 'l' && unidadIngrediente === 'ml') {
+        return cantidadReceta * 1000;
+    }
+    if (unidadReceta === 'ml' && unidadIngrediente === 'l') {
+        return cantidadReceta / 1000;
+    }
+    
+    // Si no hay conversión posible, mostrar error
+    console.error(`No se puede convertir ${unidadReceta} a ${unidadIngrediente}`);
+    alert(`No se puede convertir ${unidadReceta} a ${unidadIngrediente}. Verifica las unidades.`);
+    return null;
+}
+
 // Cargar datos desde la API
 async function cargarDatos() {
     console.log('=== CARGANDO DATOS ===');
@@ -402,12 +470,15 @@ document.getElementById('btnAgregarIngredienteReceta').addEventListener('click',
     console.log('=== AGREGAR INGREDIENTE A RECETA ===');
     const selectIngrediente = document.getElementById('selectIngredienteReceta');
     const inputCantidad = document.getElementById('cantidadIngredienteReceta');
+    const selectUnidad = document.getElementById('unidadIngredienteReceta');
     const cantidad = parseFloat(inputCantidad.value);
+    const unidadReceta = selectUnidad.value;
     
     console.log('Select element:', selectIngrediente ? 'encontrado' : 'NO ENCONTRADO');
     console.log('Input cantidad element:', inputCantidad ? 'encontrado' : 'NO ENCONTRADO');
     console.log('Select value:', selectIngrediente.value);
     console.log('Cantidad ingresada:', cantidad);
+    console.log('Unidad seleccionada:', unidadReceta);
     console.log('Ingredientes disponibles:', ingredientes.length);
     console.log('Ingredientes en receta actual:', ingredientesRecetaTemp.length);
     
@@ -417,7 +488,7 @@ document.getElementById('btnAgregarIngredienteReceta').addEventListener('click',
         return;
     }
     
-    const ingredienteId = selectIngrediente.value; // Dejar como string para MongoDB
+    const ingredienteId = selectIngrediente.value;
     console.log('ID del ingrediente seleccionado:', ingredienteId);
     console.log('Buscando ingrediente en array...');
     const ingrediente = ingredientes.find(i => i.id === ingredienteId);
@@ -440,14 +511,24 @@ document.getElementById('btnAgregarIngredienteReceta').addEventListener('click',
         return;
     }
     
+    // Convertir unidades
+    console.log('Convirtiendo unidades...');
+    const cantidadConvertida = convertirUnidad(cantidad, unidadReceta, ingrediente);
+    
+    if (cantidadConvertida === null) {
+        return; // Error en conversión
+    }
+    
     console.log('Agregando ingrediente a la lista temporal...');
     const nuevoIngrediente = {
         ingredienteId: ingrediente.id,
         nombre: ingrediente.nombre,
-        cantidadUsada: cantidad, // Cambiar a cantidadUsada para coincidir con el backend
-        unidad: ingrediente.unidad,
+        cantidadUsada: cantidadConvertida, // Cantidad convertida a la unidad del inventario
+        cantidadReceta: cantidad,           // Cantidad original de la receta
+        unidadReceta: unidadReceta,         // Unidad usada en la receta
+        unidad: ingrediente.unidad,         // Unidad del inventario
         costoPorUnidad: ingrediente.costoPorUnidad,
-        costoTotal: cantidad * ingrediente.costoPorUnidad
+        costoTotal: cantidadConvertida * ingrediente.costoPorUnidad
     };
     
     console.log('Nuevo ingrediente creado:', nuevoIngrediente);
@@ -481,13 +562,18 @@ function actualizarListaIngredientesReceta() {
     }
     
     console.log('Renderizando', ingredientesRecetaTemp.length, 'ingredientes');
-    lista.innerHTML = ingredientesRecetaTemp.map((ing, index) => `
-        <div class="ingrediente-item">
-            <span>${ing.nombre}: ${ing.cantidadUsada} ${ing.unidad}</span>
-            <span>$${ing.costoTotal.toFixed(2)}</span>
-            <button type="button" class="btn-icon-small" onclick="eliminarIngredienteReceta(${index})">❌</button>
-        </div>
-    `).join('');
+    lista.innerHTML = ingredientesRecetaTemp.map((ing, index) => {
+        // Mostrar la cantidad de la receta si existe, sino la cantidad usada
+        const cantidadMostrar = ing.cantidadReceta || ing.cantidadUsada;
+        const unidadMostrar = ing.unidadReceta || ing.unidad;
+        return `
+            <div class="ingrediente-item">
+                <span>${ing.nombre}: ${cantidadMostrar} ${unidadMostrar}</span>
+                <span>$${ing.costoTotal.toFixed(2)}</span>
+                <button type="button" class="btn-icon-small" onclick="eliminarIngredienteReceta(${index})">❌</button>
+            </div>
+        `;
+    }).join('');
     console.log('Lista actualizada con HTML');
 }
 
@@ -673,9 +759,11 @@ function editarReceta(id) {
             ingredienteId: ing.ingredienteId,
             nombre: ing.nombre,
             cantidadUsada: ing.cantidadUsada,
+            cantidadReceta: ing.cantidadReceta || ing.cantidadUsada, // Mantener cantidad original de receta
+            unidadReceta: ing.unidadReceta || ing.unidad,            // Mantener unidad original de receta
             unidad: ing.unidad,
             costoPorUnidad: ing.costoPorUnidad,
-            costoTotal: ing.cantidadUsada * ing.costoPorUnidad  // Calcular correctamente el costo
+            costoTotal: ing.cantidadUsada * ing.costoPorUnidad
         };
     });
     console.log('Ingredientes transformados:', ingredientesRecetaTemp);
