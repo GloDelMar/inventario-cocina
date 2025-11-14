@@ -18,5 +18,6 @@
     { "nombre": "Raúl", "password": "raul123" },
     { "nombre": "Brianda", "password": "brianda123" },
     { "nombre": "Maestra Gloriela", "password": "gloriela123" },
-    { "nombre": "Maestra Carito", "password": "carito123" }
+    { "nombre": "Maestra Carito", "password": "carito123" },
+    { "nombre": "Maestra Toño", "password": "tono123" }
 ]
