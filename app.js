@@ -662,6 +662,7 @@ formReceta.addEventListener('submit', async (e) => {
     const precioVenta = parseFloat(document.getElementById('precioVenta').value) || 0;
     
     console.log('Datos del formulario:');
+    console.log('- Usuario ID:', usuarioId);
     console.log('- Nombre:', nombre);
     console.log('- Descripción:', descripcion);
     console.log('- Porciones:', porciones);
@@ -672,7 +673,7 @@ formReceta.addEventListener('submit', async (e) => {
     // Enviar solo los campos requeridos por el backend
     // El backend calculará automáticamente los costos
     const receta = {
-        usuarioId,
+        usuarioId: usuarioId,
         nombre,
         descripcion,
         porciones,
@@ -711,8 +712,9 @@ formReceta.addEventListener('submit', async (e) => {
         recetaEditando = null;
         console.log('Proceso completado exitosamente');
     } catch (error) {
-        console.error('Error al guardar receta:', error);
-        alert('Error al guardar la receta. Verifica la conexión con el servidor.');
+        console.error('Error completo al guardar receta:', error);
+        console.error('Error message:', error.message);
+        alert('Error al guardar la receta:\n' + error.message + '\n\nRevisa la consola del navegador (F12) para más detalles.');
     }
 });
 
