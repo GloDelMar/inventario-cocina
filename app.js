@@ -924,11 +924,11 @@ function mostrarAnalisis() {
     // Agregar event listeners para calculadora personalizada
     document.querySelectorAll('.input-precio-venta, .input-porciones-vender').forEach(input => {
         input.addEventListener('input', function() {
-            const recetaId = parseInt(this.dataset.recetaId);
+            const recetaId = this.dataset.recetaId;
             calcularGananciasPersonalizadas(recetaId);
         });
         input.addEventListener('change', function() {
-            const recetaId = parseInt(this.dataset.recetaId);
+            const recetaId = this.dataset.recetaId;
             calcularGananciasPersonalizadas(recetaId);
         });
     });
