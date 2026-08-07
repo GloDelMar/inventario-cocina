@@ -128,13 +128,9 @@ The application follows a three-layer architecture:
 
 ```mermaid
 flowchart LR
-    A[Frontend<br/>HTML / CSS / JavaScript]
-    -->|HTTP / REST|
-    B[Backend API<br/>Node.js + Express]
-
+  A[Frontend: HTML / CSS / JavaScript] -->|HTTP / REST| B[Backend API: Node.js + Express]
     B -->|Mongoose ODM| C[(MongoDB)]
-
-    A --> D[LocalStorage<br/>Client Session State]
+  A --> D[LocalStorage: Client Session State]
 ```
 
 ### Frontend
