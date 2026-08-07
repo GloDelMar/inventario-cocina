@@ -1,471 +1,439 @@
-# 🍳 Gestión de Cocina - Sistema de Inventario y Costos
+# 🍳 Kitchen Inventory & Recipe Costing System
 
-Aplicación web completa para administrar tu cocina, controlar inventario de ingredientes, crear recetas y calcular costos y ganancias automáticamente.
+> A full-stack web application designed to standardize recipe costing, centralize ingredient inventory, and support data-driven pricing and profitability decisions for kitchen and bakery operations.
 
-**✨ NUEVA VERSIÓN con MongoDB**: Los datos ahora se almacenan en una base de datos MongoDB real en lugar de localStorage.
+## 🌐 Live Demo
 
-## 🏗️ Arquitectura
+- Production URL: https://panaderiacam15.vercel.app/
 
-- **Frontend**: HTML, CSS, JavaScript vanilla (Puerto 3000)
-- **Backend**: Node.js + Express (Puerto 8080)
-- **Base de Datos**: MongoDB
+---
 
-## ✨ Características Principales
+## 📖 About the Project
 
-### 📦 Gestión de Ingredientes
-- Agregar, editar y eliminar ingredientes
-- Registrar cantidad, unidad de medida y costo de compra
-- Cálculo automático del costo por unidad
-- Tabla organizada con todos tus ingredientes
+This system was developed to address a common challenge in food businesses: recipes may be prepared consistently, but selling prices are often defined without visibility into real production cost or margin per serving.
 
-### 🍳 Gestión de Recetas
-- Crear recetas con múltiples ingredientes
-- Indicar cuántas porciones produce cada receta
-- Agregar costo de empaquetado
-- **Cálculo automático del costo total** basado en los ingredientes utilizados
-- Costo por porción calculado automáticamente
-- Ver detalles completos de cada receta
+The application provides a centralized workflow for:
 
-### 💰 Análisis de Costos y Ganancias
-- Desglose completo de costos (ingredientes + empaquetado)
-- Precio de venta sugerido con margen del 200%
-- Cálculo de ganancia por porción
-- **Calculadora personalizada** para:
-  - Establecer tu propio precio de venta
-  - Calcular ganancias para múltiples porciones
-  - Ver inversión total vs ingreso total vs ganancia
-- Porcentaje de margen de ganancia
-- Identificación de pérdidas (si el precio es muy bajo)
+- Managing ingredients and inventory costs.
+- Building recipes from existing ingredients.
+- Applying unit conversions for consistent costing.
+- Calculating total recipe cost and cost per serving.
+- Analyzing selling prices and expected profitability.
+- Supporting multiple users with logical data separation.
 
-### 💾 Persistencia de Datos
-- **Base de datos MongoDB** para almacenamiento permanente y confiable
-- API REST completa para gestionar ingredientes y recetas
-- Los datos persisten aunque cierres el navegador o cambies de dispositivo
-- Puedes acceder desde múltiples dispositivos a la misma base de datos
+The project combines operational management with business logic, transforming ingredient and recipe data into actionable cost and pricing information.
 
-## 🚀 Cómo Usar
+---
 
-### Requisitos Previos
+## 🎯 Project Value
 
-1. **Node.js** (versión 14 o superior)
-2. **MongoDB** instalado y corriendo localmente, o usar MongoDB Atlas (gratuito)
-3. **npm** (viene con Node.js)
+This project demonstrates the ability to:
 
-### Instalación y Configuración
+- Model a real-world operational problem as software.
+- Translate business requirements into explicit and testable rules.
+- Implement cost calculation and unit conversion logic.
+- Build a decoupled architecture using a static frontend, REST API, and MongoDB.
+- Deploy a full-stack application using cloud infrastructure.
 
-#### 1. Instalar MongoDB
+---
 
-**En Ubuntu/Debian:**
-```bash
-# Importar clave pública de MongoDB
-wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo apt-key add -
+## ✨ Core Features
 
-# Crear lista de fuentes
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+- 🔐 Basic user authentication with client-side session management.
+- 👥 Multi-user data isolation through usuarioId filtering.
+- 📦 Full CRUD operations for ingredients.
+- 🍳 Full CRUD operations for recipes.
+- ⚖️ Unit conversion during recipe creation.
+- 💰 Automatic ingredient unit-cost calculation.
+- 🧮 Automatic recipe cost calculation.
+- 📊 Cost-per-serving and profitability analysis.
+- 💵 Selling price and profit estimation.
+- 🔎 Recipe-level cost breakdown.
+- ❤️ API health-check endpoint for basic observability.
+- 📱 Responsive user interface.
 
-# Actualizar e instalar
-sudo apt-get update
-sudo apt-get install -y mongodb-org
+---
 
-# Iniciar MongoDB
-sudo systemctl start mongod
-sudo systemctl enable mongod
+## 🧠 Business Logic
+
+### 5.1 Inventory Costing
+
+Each ingredient is registered using:
+
+- Purchase quantity
+- Total purchase cost
+- Purchase unit
+
+The unit cost is calculated as:
+
+```text
+unitCost = totalCost / purchaseQuantity
 ```
 
-**En macOS:**
-```bash
-brew tap mongodb/brew
-brew install mongodb-community
-brew services start mongodb-community
+This provides a standardized cost basis for calculating the cost of ingredients used in recipes.
+
+---
+
+### 5.2 Unit Conversion
+
+When an ingredient is added to a recipe, the requested quantity is converted to a compatible unit used by the inventory record.
+
+Supported examples include:
+
+- 1 cup = 240 g or 240 ml
+- 1 tablespoon = 15 g or 15 ml
+- 1 teaspoon = 5 g or 5 ml
+- 1 kg = 1,000 g
+- 1 L = 1,000 ml
+
+If a valid conversion between selected units does not exist, the operation is prevented to avoid inaccurate costing.
+
+> Conversion factors are defined according to measurement type and are intended to provide consistent operational estimates rather than universal physical equivalences.
+
+---
+
+### 5.3 Recipe Costing
+
+For a recipe containing N ingredients:
+
+```text
+ingredientCost = Σ(quantityUsed_i × unitCost_i)
+
+totalRecipeCost = ingredientCost + packagingCost
+
+costPerServing = totalRecipeCost / servings
 ```
 
-**En Windows:**
-- Descarga el instalador desde [mongodb.com](https://www.mongodb.com/try/download/community)
-- Ejecuta el instalador y sigue las instrucciones
+This allows the system to automatically determine production cost per recipe and cost per serving.
 
-**O usa MongoDB Atlas (nube - gratis):**
-1. Crea una cuenta en [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-2. Crea un cluster gratuito
-3. Obtén tu connection string
-4. Úsalo en el archivo `.env` del backend
+---
 
-#### 2. Configurar el Backend
+### 5.4 Pricing & Profitability
 
-```bash
-# Navega a la carpeta del backend
-cd backend
+The system allows users to register a selling price and analyze expected profitability per recipe.
 
-# Instala las dependencias
-npm install
+```text
+profitPerServing = sellingPrice - costPerServing
 
-# Crea el archivo .env (ya existe, pero verifica la configuración)
-# El archivo debe contener:
-# MONGODB_URI=mongodb://localhost:27017/inventario-cocina
-# PORT=8080
-# NODE_ENV=development
-# FRONTEND_URL=http://localhost:3000
-
-# Inicia el servidor backend
-npm start
-
-# O para desarrollo con auto-reload:
-npm run dev
+profitMargin = (profitPerServing / sellingPrice) × 100
 ```
 
-El backend estará corriendo en **http://localhost:8080**
+The resulting analysis connects operational data with business decisions, allowing users to evaluate whether a selling price provides a sustainable margin.
 
-#### 3. Iniciar el Frontend
+---
 
-```bash
-# Desde la carpeta raíz del proyecto
-cd /home/glo_suarez/inventario
+## 🏗 System Architecture
 
-# Inicia un servidor HTTP simple
-python3 -m http.server 3000
+The application follows a three-layer architecture:
 
-# O con Node.js
-npx http-server -p 3000
-```
+```mermaid
+flowchart LR
+    A[Frontend<br/>HTML / CSS / JavaScript]
+    -->|HTTP / REST|
+    B[Backend API<br/>Node.js + Express]
 
-El frontend estará disponible en **http://localhost:3000**
+    B -->|Mongoose ODM| C[(MongoDB)]
 
-### Opción Alternativa: Sin Backend (Solo localStorage)
-
-Si no quieres usar MongoDB, puedes usar la versión anterior con localStorage:
-1. Comenta o elimina la línea `const API_URL = 'http://localhost:8080/api';` en `app.js`
-2. Restaura las funciones originales de localStorage
-3. Abre `index.html` directamente en tu navegador
-
-## 📖 Guía de Uso
-
-### 1️⃣ Agregar Ingredientes
-
-1. Ve a la pestaña **"Ingredientes"**
-2. Haz clic en **"+ Nuevo Ingrediente"**
-3. Completa el formulario:
-   - **Nombre**: Ejemplo: "Harina de trigo"
-   - **Cantidad**: Ejemplo: 5 (kg)
-   - **Unidad**: Selecciona kg, g, l, ml, unidad, pieza
-   - **Costo Total**: Lo que pagaste por esa cantidad, ejemplo: $45.00
-   - El **Costo por Unidad** se calcula automáticamente
-4. Haz clic en **"Guardar"**
-
-**Consejos:**
-- Registra todos tus ingredientes antes de crear recetas
-- Puedes editar o eliminar ingredientes en cualquier momento
-- El costo por unidad te ayuda a saber exactamente cuánto gastas de cada ingrediente
-
-### 2️⃣ Crear Recetas
-
-1. Ve a la pestaña **"Recetas"**
-2. Haz clic en **"+ Nueva Receta"**
-3. Completa la información básica:
-   - **Nombre**: Ejemplo: "Pastel de chocolate"
-   - **Descripción**: (opcional) Detalles o notas
-   - **Porciones**: Cuántas porciones produce la receta
-4. Agrega ingredientes:
-   - Selecciona un ingrediente del menú desplegable
-   - Ingresa la cantidad que usa tu receta
-   - Haz clic en **"Agregar"**
-   - Repite para todos los ingredientes
-5. Agrega el **Costo de Empaquetado** (cajas, bolsas, etiquetas, etc.)
-6. El **Costo Total** y **Costo por Porción** se calculan automáticamente
-7. Haz clic en **"Guardar Receta"**
-
-**Consejos:**
-- Si te equivocas en un ingrediente, elimínalo con el botón ❌ y agrégalo de nuevo
-- El costo de empaquetado es importante para saber tu inversión real
-- Puedes ver cuánto cuesta cada ingrediente en la lista
-
-### 3️⃣ Analizar Costos y Ganancias
-
-1. Ve a la pestaña **"Análisis de Costos"**
-2. Verás todas tus recetas con:
-   - **Inversión por porción**: Cuánto gastas en hacer cada porción
-   - **Precio sugerido de venta**: Recomendación con 200% de margen
-   - **Ganancia por porción**: Cuánto ganarías
-3. Usa la **Calculadora Personalizada**:
-   - Ingresa tu **precio de venta deseado**
-   - Ingresa cuántas **porciones planeas vender**
-   - Ve instantáneamente:
-     - Inversión total
-     - Ingreso total
-     - Ganancia total (o pérdida si el precio es muy bajo)
-
-**Consejos:**
-- El precio sugerido tiene un margen del 200% (si inviertes $10, vendes en $30)
-- Ajusta el precio según tu mercado y competencia
-- La calculadora te ayuda a simular diferentes escenarios de venta
-- Si aparece en rojo, significa que tendrías pérdidas con ese precio
-
-## 📊 Ejemplo Práctico
-
-### Ejemplo: Brownies Caseros
-
-**Ingredientes agregados:**
-- Harina: 1kg por $25.00 → $0.025/g
-- Azúcar: 1kg por $18.00 → $0.018/g
-- Cacao: 500g por $65.00 → $0.13/g
-- Huevos: 18 unidades por $60.00 → $3.33/unidad
-- Mantequilla: 500g por $85.00 → $0.17/g
-
-**Receta: Brownies (12 porciones)**
-- Harina: 200g → $5.00
-- Azúcar: 250g → $4.50
-- Cacao: 100g → $13.00
-- Huevos: 3 unidades → $10.00
-- Mantequilla: 150g → $25.50
-- Empaquetado: $15.00 (cajas individuales)
-- **Costo Total**: $73.00
-- **Costo por Porción**: $6.08
-
-**Análisis de Ganancia:**
-- Precio sugerido: $18.24 por brownie
-- Ganancia: $12.16 por brownie
-- Si vendes las 12 porciones: **$145.92 de ganancia**
-
-## 🗂️ Estructura del Proyecto
-
-```
-inventario/
-├── index.html              # Interfaz principal de la aplicación
-├── app.js                  # Lógica del frontend con integración API
-├── styles.css              # Estilos y diseño responsivo
-├── README.md               # Esta documentación
-└── backend/
-    ├── server.js           # Servidor Express principal
-    ├── package.json        # Dependencias del backend
-    ├── .env                # Variables de entorno (NO subir a git)
-    ├── .env.example        # Ejemplo de configuración
-    ├── models/
-    │   ├── Ingrediente.js  # Modelo de ingredientes
-    │   └── Receta.js       # Modelo de recetas
-    └── routes/
-        ├── ingredientes.js # Rutas API para ingredientes
-        └── recetas.js      # Rutas API para recetas
-```
-
-## 🔌 API Endpoints
-
-### Ingredientes
-
-- `GET /api/ingredientes` - Obtener todos los ingredientes
-- `GET /api/ingredientes/:id` - Obtener un ingrediente específico
-- `POST /api/ingredientes` - Crear nuevo ingrediente
-- `PUT /api/ingredientes/:id` - Actualizar ingrediente
-- `DELETE /api/ingredientes/:id` - Eliminar ingrediente
-
-### Recetas
-
-- `GET /api/recetas` - Obtener todas las recetas
-- `GET /api/recetas/:id` - Obtener una receta específica
-- `POST /api/recetas` - Crear nueva receta
-- `PUT /api/recetas/:id` - Actualizar receta
-- `DELETE /api/recetas/:id` - Eliminar receta
-
-### Utilidad
-
-- `GET /api/health` - Verificar estado de la API y conexión a MongoDB
-
-## ⚙️ Variables de Entorno
-
-Crea un archivo `.env` en la carpeta `backend/` con las siguientes variables:
-
-```env
-# URI de conexión a MongoDB
-MONGODB_URI=mongodb://localhost:27017/inventario-cocina
-# O para MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/inventario-cocina
-
-# Puerto del servidor backend
-PORT=8080
-
-# Ambiente
-NODE_ENV=development
-
-# URL del frontend (para CORS)
-FRONTEND_URL=http://localhost:3000
-```
-
-## 🌐 Despliegue en Producción
-
-### Backend (API + MongoDB)
-
-#### Opción 1: Railway.app (Recomendado - Gratuito)
-
-1. Crea una cuenta en [Railway](https://railway.app)
-2. Instala Railway CLI:
-   ```bash
-   npm install -g @railway/cli
-   ```
-3. Despliega el backend:
-   ```bash
-   cd backend
-   railway login
-   railway init
-   railway up
-   ```
-4. Agrega MongoDB en Railway:
-   - Ve a tu proyecto en Railway
-   - Click en "New" → "Database" → "MongoDB"
-   - Copia la connection string a tus variables de entorno
-
-#### Opción 2: Render.com (Gratuito)
-
-1. Sube tu código a GitHub
-2. Ve a [Render](https://render.com) y crea una cuenta
-3. Crea un nuevo "Web Service"
-4. Conecta tu repositorio
-5. Configura:
-   - Build Command: `cd backend && npm install`
-   - Start Command: `cd backend && npm start`
-   - Variables de entorno (agregar en Render):
-     - `MONGODB_URI`: tu URI de MongoDB Atlas
-     - `PORT`: 8080
-     - `FRONTEND_URL`: URL de tu frontend
-6. Crea una base de datos MongoDB en MongoDB Atlas (gratis)
-
-#### Opción 3: Heroku
-
-```bash
-# Instala Heroku CLI
-cd backend
-heroku login
-heroku create mi-app-cocina-backend
-heroku addons:create mongolab:sandbox
-git push heroku main
+    A --> D[LocalStorage<br/>Client Session State]
 ```
 
 ### Frontend
 
-#### GitHub Pages (Gratis)
+Responsible for:
 
-1. Sube tu proyecto a un repositorio de GitHub
-2. Ve a Settings → Pages
-3. Selecciona la rama `main` y la carpeta raíz
-4. **IMPORTANTE**: Actualiza `API_URL` en `app.js` con la URL de tu backend desplegado
-5. Tu app estará en `https://tu-usuario.github.io/nombre-repo`
+- User interface and interaction.
+- Form handling and data capture.
+- Client-side rendering.
+- Session state management.
+- Communication with the REST API.
 
-#### Netlify (Gratis)
+### Backend
 
-1. Actualiza `API_URL` en `app.js` con la URL de tu backend
-2. Arrastra la carpeta del proyecto a [Netlify Drop](https://app.netlify.com/drop)
-3. O conecta con GitHub para deploys automáticos
+Responsible for:
 
-#### Vercel (Gratis)
+- REST API endpoints.
+- Request validation.
+- Business logic.
+- Recipe and ingredient persistence.
+- Cost calculation logic.
+- CORS configuration.
 
-```bash
-npm install -g vercel
-# Actualiza API_URL en app.js primero
-vercel
-```
+### Database
 
-### MongoDB en la Nube (Gratuito)
+MongoDB provides persistent storage for:
 
-**MongoDB Atlas** ofrece 512MB gratis:
-
-1. Ve a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-2. Crea una cuenta gratuita
-3. Crea un cluster (elige el tier gratuito)
-4. Crea un usuario de base de datos
-5. Configura IP whitelist (0.0.0.0/0 para acceso desde cualquier lugar)
-6. Obtén tu connection string
-7. Actualiza `MONGODB_URI` en tu `.env` o variables de entorno del hosting
-
-## 💡 Tips y Mejores Prácticas
-
-### Para Ingredientes
-- Actualiza los precios regularmente cuando haya cambios
-- Usa unidades consistentes (si compras en kg, registra en kg)
-- Guarda los recibos de compra para verificar precios
-
-### Para Recetas
-- Sé preciso con las cantidades para cálculos exactos
-- Incluye todos los costos (no olvides el empaquetado)
-- Considera hacer recetas de prueba para ajustar cantidades
-
-### Para Precios
-- Investiga los precios de la competencia
-- Considera el tiempo de preparación en tu precio
-- El margen del 200% es estándar, pero ajusta según tu mercado
-- No olvides incluir costos de luz, gas y mano de obra
-
-### Para el Negocio
-- Exporta tus datos regularmente (usa el botón de exportar del navegador)
-- Haz copias de seguridad del localStorage
-- Actualiza costos al menos una vez al mes
-- Prueba diferentes escenarios de precio en el análisis
-
-## 🔧 Soporte Técnico
-
-### El backend no inicia
-
-- Verifica que MongoDB esté corriendo: `sudo systemctl status mongod` (Linux) o `brew services list` (macOS)
-- Verifica que el puerto 8080 no esté en uso: `lsof -i :8080`
-- Revisa que las dependencias estén instaladas: `cd backend && npm install`
-- Verifica la conexión a MongoDB en el archivo `.env`
-
-### El frontend no se conecta al backend
-
-- Asegúrate de que el backend esté corriendo en http://localhost:8080
-- Verifica que `API_URL` en `app.js` apunte a `http://localhost:8080/api`
-- Revisa la consola del navegador (F12) para ver errores de CORS o red
-- Verifica que CORS esté configurado correctamente en el backend
-
-### Error de CORS
-
-- Asegúrate de que `FRONTEND_URL` en `.env` del backend coincida con la URL de tu frontend
-- El backend ya tiene CORS configurado, pero verifica que el puerto coincida
-
-### MongoDB no se conecta
-
-- Verifica que MongoDB esté corriendo: `mongosh` para probar la conexión
-- Si usas MongoDB Atlas, verifica tu IP whitelist
-- Revisa que el `MONGODB_URI` en `.env` sea correcto
-- Prueba la conexión desde terminal: `mongosh "tu-connection-string"`
-
-### Los datos no se guardan
-
-- Verifica que el backend esté corriendo y respondiendo
-- Abre http://localhost:8080/api/health para verificar el estado
-- Revisa la consola del navegador para errores
-- Verifica que MongoDB esté aceptando conexiones
-
-## 📱 Compatibilidad
-
-- ✅ Chrome (recomendado)
-- ✅ Firefox
-- ✅ Safari
-- ✅ Edge
-- ✅ Dispositivos móviles (iOS/Android)
-- ✅ Tablets
-
-## 🔐 Privacidad y Seguridad
-
-- Los datos se almacenan en **tu propia base de datos MongoDB**
-- Si usas MongoDB local, los datos nunca salen de tu computadora
-- Si usas MongoDB Atlas, los datos están encriptados en tránsito y en reposo
-- El backend incluye validación de datos para prevenir inyecciones
-- **Recomendación**: En producción, agrega autenticación y autorización (JWT)
-- No expongas tus credenciales de MongoDB en repositorios públicos
-
-## 📄 Licencia
-
-Este proyecto es de uso libre. Puedes modificarlo y adaptarlo a tus necesidades.
-
-## 🤝 Contribuciones
-
-Si deseas agregar funcionalidades:
-- Export/Import de datos en CSV
-- Gráficos de costos y ganancias
-- Historial de precios de ingredientes
-- Calculadora de recetas escalables
-- Base de datos en servidor
-
-## 📞 Contacto
-
-Para soporte o sugerencias, crea un issue en el repositorio.
+- Users
+- Ingredients
+- Recipes
 
 ---
 
-**¡Disfruta administrando tu cocina de manera profesional! 🎉👨‍🍳👩‍🍳**
+## 🛠 Tech Stack
+
+### Frontend
+
+- HTML5
+- CSS3
+- Vanilla JavaScript
+
+### Backend
+
+- Node.js
+- Express.js
+- Mongoose
+- dotenv
+- cors
+- body-parser
+
+### Database
+
+- MongoDB
+
+### Deployment
+
+- Static frontend: Vercel
+- Backend API: Render
+
+---
+
+## 🔌 REST API
+
+### Base URLs
+
+Local:
+
+```text
+http://localhost:8080/api
+```
+
+Production:
+
+```text
+https://inventario-cocina-backend.onrender.com/api
+```
+
+### Authentication
+
+| Method | Endpoint     | Description                         |
+|--------|--------------|-------------------------------------|
+| POST   | /auth/login  | Authenticate a user                 |
+| POST   | /auth/seed   | Create initial users for setup      |
+
+### Ingredients
+
+| Method | Endpoint                     | Description            |
+|--------|------------------------------|------------------------|
+| GET    | /ingredientes?usuarioId={id} | Get user ingredients   |
+| GET    | /ingredientes/:id            | Get one ingredient     |
+| POST   | /ingredientes                | Create an ingredient   |
+| PUT    | /ingredientes/:id            | Update an ingredient   |
+| DELETE | /ingredientes/:id            | Delete an ingredient   |
+
+### Recipes
+
+| Method | Endpoint                | Description          |
+|--------|-------------------------|----------------------|
+| GET    | /recetas?usuarioId={id} | Get user recipes     |
+| GET    | /recetas/:id            | Get one recipe       |
+| POST   | /recetas                | Create a recipe      |
+| PUT    | /recetas/:id            | Update a recipe      |
+| DELETE | /recetas/:id            | Delete a recipe      |
+
+### Health Check
+
+```text
+GET /health
+```
+
+Returns the current API status and database connection status.
+
+---
+
+## 📦 Example API Payloads
+
+### Create an Ingredient
+
+```json
+{
+  "usuarioId": "66f0...",
+  "nombre": "Flour",
+  "cantidad": 1000,
+  "unidad": "g",
+  "costoTotal": 35
+}
+```
+
+### Create a Recipe
+
+```json
+{
+  "usuarioId": "66f0...",
+  "nombre": "Classic Brownie",
+  "descripcion": "Batch of brownies",
+  "porciones": 12,
+  "ingredientes": [
+    {
+      "ingredienteId": "66f1...",
+      "cantidadUsada": 250,
+      "unidadReceta": "g"
+    },
+    {
+      "ingredienteId": "66f2...",
+      "cantidadUsada": 3,
+      "unidadReceta": "unidad"
+    }
+  ],
+  "costoEmpaquetado": 18,
+  "precioVenta": 35
+}
+```
+
+---
+
+## 📸 Screenshots
+
+Current product screenshots:
+
+- Login
+- Dashboard (Ingredients)
+- Recipes Dashboard
+- New Recipe Form
+- Cost Analysis
+
+### Login
+
+![Login](docs/screenshots/login.png)
+
+### Dashboard Ingredients
+
+![Dashboard Ingredientes](docs/screenshots/dashboard_ingredientes.png)
+
+### Recipes Dashboard
+
+![Recetas Dashboard](docs/screenshots/recetas_dash.png)
+
+### New Recipe
+
+![Receta Nueva](docs/screenshots/recetas_nuevas.png)
+
+### Cost Analysis
+
+![Costos](docs/screenshots/costos.png)
+
+---
+
+## 🚀 Installation
+
+### Prerequisites
+
+- Node.js 18+
+- npm
+- Local MongoDB instance or MongoDB Atlas
+
+### Backend
+
+```bash
+cd backend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+### Frontend
+
+From the project root:
+
+```bash
+python3 -m http.server 3000
+```
+
+Then open:
+
+```text
+Frontend: http://localhost:3000
+Backend:  http://localhost:8080
+Health:   http://localhost:8080/api/health
+```
+
+---
+
+## ⚙️ Environment Variables
+
+Create backend/.env:
+
+```env
+MONGODB_URI=mongodb://localhost:27017/inventario-cocina
+PORT=8080
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+```
+
+### Configuration
+
+- MONGODB_URI: MongoDB connection string. Can point to MongoDB Atlas in production.
+- PORT: Backend API port.
+- NODE_ENV: Application environment.
+- FRONTEND_URL: Frontend origin used for CORS configuration.
+
+---
+
+## 🔮 Future Improvements
+
+### Security
+
+- Password hashing with bcrypt.
+- JWT-based authentication.
+- Improved session management.
+- Role-based access control (RBAC).
+
+### Inventory & Costing
+
+- Automatic inventory deduction when producing recipes.
+- Purchase batch history.
+- Supplier management.
+- Historical ingredient pricing.
+
+### Analytics
+
+- Configurable target profit margins.
+- KPI dashboard.
+- Average profit margin analysis.
+- Most profitable recipes.
+- Break-even analysis.
+
+### Engineering
+
+- Unit and integration tests for costing rules.
+- Automated CI/CD validation.
+- API documentation with OpenAPI/Swagger.
+- Improved error handling and validation.
+
+---
+
+## 👩‍💻 Author
+
+Gloriela Suarez Castaneda  
+Full Stack Developer
+
+GitHub: [GloDelMar](https://github.com/GloDelMar)
+
+---
+
+## 📄 License
+
+Licensed under the MIT License. See [LICENSE](LICENSE).
+
+---
+
+## 🎯 What This Project Demonstrates
+
+This project demonstrates the ability to:
+
+- Translate operational requirements into explicit business rules.
+- Design and implement a functional full-stack application.
+- Build REST APIs with Node.js and Express.
+- Work with MongoDB and Mongoose.
+- Implement data-driven cost and pricing calculations.
+- Connect a frontend application to a persistent backend.
+- Deploy frontend and backend services independently.
+- Build software focused on real operational and business needs.
